@@ -4,6 +4,7 @@
   const itemInfoEl = document.getElementById('item-info');
   const searchInput = document.getElementById('search');
   const categorySelect = document.getElementById('category-filter');
+  const factionSelect = document.getElementById('faction-filter');
   const clearBtn = document.getElementById('clear-selection');
 
   const loading = document.createElement('div');
@@ -83,9 +84,15 @@
     });
   }
 
-  function getRowItems(filterCategory = '', searchTerm = '') {
+  function matchesFaction(item, faction) {
+    if (!faction) return true;
+    return !item.faction || item.faction === 'Neutral' || item.faction === faction;
+  }
+
+  function getRowItems(filterCategory = '', searchTerm = '', filterFaction = '') {
     let list = allItems.filter(i => outputs.has(i.codeName));
     if (filterCategory) list = list.filter(i => i.category === filterCategory);
+    if (filterFaction) list = list.filter(i => matchesFaction(i, filterFaction));
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(i =>
@@ -96,20 +103,21 @@
     return sortItems(list);
   }
 
-  function getColItems(rowItems) {
+  function getColItems(rowItems, filterFaction = '') {
     const usedInputs = new Set();
     for (const row of rowItems) {
       const rels = relations[row.codeName] || {};
       for (const inputCode in rels) usedInputs.add(inputCode);
     }
-    return sortItems(allItems.filter(i => usedInputs.has(i.codeName)));
+    return sortItems(allItems.filter(i => usedInputs.has(i.codeName) && matchesFaction(i, filterFaction)));
   }
 
   function renderMatrix() {
     const filterCategory = categorySelect.value;
     const searchTerm = searchInput.value.trim();
-    const rowItems = getRowItems(filterCategory, searchTerm);
-    const colItems = getColItems(rowItems);
+    const filterFaction = factionSelect.value;
+    const rowItems = getRowItems(filterCategory, searchTerm, filterFaction);
+    const colItems = getColItems(rowItems, filterFaction);
 
     if (rowItems.length === 0) {
       matrixEl.innerHTML = '<div style="padding:2rem;color:#9fb0c7">Ningún ítem coincide con los filtros.</div>';
@@ -308,11 +316,13 @@
     itemInfoEl.innerHTML = '<p>Haz clic en una fila o celda para ver los detalles.</p>';
     searchInput.value = '';
     categorySelect.value = '';
+    factionSelect.value = '';
     renderMatrix();
   }
 
   searchInput.addEventListener('input', () => renderMatrix());
   categorySelect.addEventListener('change', () => renderMatrix());
+  factionSelect.addEventListener('change', () => renderMatrix());
   clearBtn.addEventListener('click', clearSelection);
 
   loading.remove();
