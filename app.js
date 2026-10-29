@@ -37,22 +37,6 @@
     Other: '#7f8c8d'
   };
 
-  const categoryLabels = {
-    HeavyAmmo: 'Munición pesada',
-    HeavyArms: 'Armas pesadas',
-    SmallArms: 'Armas ligeras',
-    Utility: 'Utilidad',
-    Supplies: 'Suministros',
-    Medical: 'Médico',
-    Uniforms: 'Uniformes',
-    Parts: 'Piezas',
-    Other: 'Otros'
-  };
-
-  function categoryLabel(category) {
-    return categoryLabels[category] || category;
-  }
-
   function escapeHtml(str) {
     if (!str) return '';
     return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -82,14 +66,13 @@
   }
 
   const allItems = Object.values(items);
-  const categories = [...new Set(allItems.map(i => i.category))]
-    .sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b)));
+  const categories = [...new Set(allItems.map(i => i.category))].sort();
 
   // Llenar filtro de categorías
   for (const cat of categories) {
     const option = document.createElement('option');
     option.value = cat;
-    option.textContent = categoryLabel(cat);
+    option.textContent = cat;
     categorySelect.appendChild(option);
   }
 
@@ -224,7 +207,7 @@
         ${item.iconFile ? `<img src="${item.iconFile}" alt="">` : ''}
         <div>
           <h2>${escapeHtml(item.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(categoryLabel(item.category))} · Nivel ${item.tier}</div>
+          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(item.category)} · Nivel ${item.tier}</div>
         </div>
       </div>
       <p>${escapeHtml(item.description)}</p>
@@ -272,7 +255,7 @@
         ${item.iconFile ? `<img src="${item.iconFile}" alt="">` : ''}
         <div>
           <h2>${escapeHtml(item.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(categoryLabel(item.category))} · Material de entrada</div>
+          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(item.category)} · Material de entrada</div>
         </div>
       </div>
       <p>${escapeHtml(item.description)}</p>
@@ -301,7 +284,7 @@
         ${outputItem.iconFile ? `<img src="${outputItem.iconFile}" alt="">` : ''}
         <div>
           <h2>${escapeHtml(outputItem.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(categoryLabel(outputItem.category))} · Nivel ${outputItem.tier}</div>
+          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(outputItem.category)} · Nivel ${outputItem.tier}</div>
         </div>
       </div>
       <h3>Necesita ${inputItem.displayName}</h3>
