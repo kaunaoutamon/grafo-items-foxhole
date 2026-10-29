@@ -84,7 +84,12 @@
     });
   }
 
-  function matchesFaction(item, faction) {
+  function matchesRowFaction(item, faction) {
+    if (!faction) return true;
+    return !item.faction || item.faction === faction;
+  }
+
+  function matchesColumnFaction(item, faction) {
     if (!faction) return true;
     return !item.faction || item.faction === 'Neutral' || item.faction === faction;
   }
@@ -92,7 +97,7 @@
   function getRowItems(filterCategory = '', searchTerm = '', filterFaction = '') {
     let list = allItems.filter(i => outputs.has(i.codeName));
     if (filterCategory) list = list.filter(i => i.category === filterCategory);
-    if (filterFaction) list = list.filter(i => matchesFaction(i, filterFaction));
+    if (filterFaction) list = list.filter(i => matchesRowFaction(i, filterFaction));
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(i =>
@@ -109,7 +114,7 @@
       const rels = relations[row.codeName] || {};
       for (const inputCode in rels) usedInputs.add(inputCode);
     }
-    return sortItems(allItems.filter(i => usedInputs.has(i.codeName) && matchesFaction(i, filterFaction)));
+    return sortItems(allItems.filter(i => usedInputs.has(i.codeName) && matchesColumnFaction(i, filterFaction)));
   }
 
   function renderMatrix() {
