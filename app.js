@@ -8,7 +8,7 @@
 
   const loading = document.createElement('div');
   loading.className = 'loading';
-  loading.textContent = 'Loading Foxhole data...';
+  loading.textContent = 'Cargando datos de Foxhole...';
   matrixContainer.appendChild(loading);
 
   let data;
@@ -17,7 +17,7 @@
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     data = await res.json();
   } catch (err) {
-    loading.textContent = 'Error loading data. Make sure the server is running.';
+    loading.textContent = 'Error al cargar los datos. Verifica la conexión e intenta nuevamente.';
     console.error(err);
     return;
   }
@@ -36,6 +36,22 @@
     Parts: '#95a5a6',
     Other: '#7f8c8d'
   };
+
+  const categoryLabels = {
+    HeavyAmmo: 'Munición pesada',
+    HeavyArms: 'Armas pesadas',
+    SmallArms: 'Armas ligeras',
+    Utility: 'Utilidad',
+    Supplies: 'Suministros',
+    Medical: 'Médico',
+    Uniforms: 'Uniformes',
+    Parts: 'Piezas',
+    Other: 'Otros'
+  };
+
+  function categoryLabel(category) {
+    return categoryLabels[category] || category;
+  }
 
   function escapeHtml(str) {
     if (!str) return '';
@@ -66,13 +82,14 @@
   }
 
   const allItems = Object.values(items);
-  const categories = [...new Set(allItems.map(i => i.category))].sort();
+  const categories = [...new Set(allItems.map(i => i.category))]
+    .sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b)));
 
   // Llenar filtro de categorías
   for (const cat of categories) {
     const option = document.createElement('option');
     option.value = cat;
-    option.textContent = cat;
+    option.textContent = categoryLabel(cat);
     categorySelect.appendChild(option);
   }
 
@@ -112,7 +129,7 @@
     const colItems = getColItems(rowItems);
 
     if (rowItems.length === 0) {
-      matrixEl.innerHTML = '<div style="padding:2rem;color:#9fb0c7">No items match the filters.</div>';
+      matrixEl.innerHTML = '<div style="padding:2rem;color:#9fb0c7">Ningún ítem coincide con los filtros.</div>';
       return;
     }
 
@@ -123,7 +140,7 @@
     const headerRow = document.createElement('tr');
     const corner = document.createElement('th');
     corner.className = 'row-header';
-    corner.textContent = `${rowItems.length} items`;
+    corner.textContent = `${rowItems.length} ítems`;
     headerRow.appendChild(corner);
 
     for (const col of colItems) {
@@ -162,7 +179,7 @@
       th.innerHTML = `
         ${row.iconFile ? `<img class="row-icon" src="${row.iconFile}" alt="">` : ''}
         <span title="${escapeHtml(row.description)}">${escapeHtml(row.displayName)}</span>
-        <span style="color:#9fb0c7;margin-left:0.25rem">T${row.tier}</span>
+        <span style="color:#9fb0c7;margin-left:0.25rem" title="Nivel ${row.tier}">T${row.tier}</span>
       `;
       th.addEventListener('click', () => showItemDetails(row.codeName));
       tr.appendChild(th);
@@ -176,7 +193,7 @@
         if (rel) {
           td.className = 'has-relation';
           td.innerHTML = '<span class="cell-dot"></span>';
-          td.title = `${escapeHtml(row.displayName)} needs ${rel.quantity}× ${escapeHtml(col.displayName)} (${rel.building})`;
+          td.title = `${escapeHtml(row.displayName)} necesita ${rel.quantity}× ${escapeHtml(col.displayName)} (${rel.building})`;
           td.addEventListener('click', () => showRelationDetails(row.codeName, col.codeName));
         }
         tr.appendChild(td);
@@ -207,14 +224,14 @@
         ${item.iconFile ? `<img src="${item.iconFile}" alt="">` : ''}
         <div>
           <h2>${escapeHtml(item.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(item.category)} · Tier ${item.tier}</div>
+          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(categoryLabel(item.category))} · Nivel ${item.tier}</div>
         </div>
       </div>
       <p>${escapeHtml(item.description)}</p>
     `;
 
     if (outputRecipes.length > 0) {
-      html += '<h3>Produced from</h3>';
+      html += '<h3>Se produce en</h3>';
       for (const r of outputRecipes.slice(0, 20)) {
         html += `
           <div class="recipe">
@@ -226,18 +243,18 @@
         `;
       }
       if (outputRecipes.length > 20) {
-        html += `<p style="color:#9fb0c7;font-size:0.85rem">...and ${outputRecipes.length - 20} more recipes.</p>`;
+        html += `<p style="color:#9fb0c7;font-size:0.85rem">...y ${outputRecipes.length - 20} recetas más.</p>`;
       }
     }
 
     if (inputRecipes.length > 0) {
-      html += '<h3>Used in</h3><ul>';
+      html += '<h3>Se usa en</h3><ul>';
       for (const r of inputRecipes.slice(0, 40)) {
         const target = items[r.output];
         html += `<li>${escapeHtml(target?.displayName || r.output)} <span style="color:#9fb0c7">(${escapeHtml(r.building)})</span></li>`;
       }
       if (inputRecipes.length > 40) {
-        html += `<li style="color:#9fb0c7">...and ${inputRecipes.length - 40} more.</li>`;
+        html += `<li style="color:#9fb0c7">...y ${inputRecipes.length - 40} más.</li>`;
       }
       html += '</ul>';
     }
@@ -255,11 +272,11 @@
         ${item.iconFile ? `<img src="${item.iconFile}" alt="">` : ''}
         <div>
           <h2>${escapeHtml(item.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(item.category)} · Input material</div>
+          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(categoryLabel(item.category))} · Material de entrada</div>
         </div>
       </div>
       <p>${escapeHtml(item.description)}</p>
-      <h3>Used in ${usedBy.length} recipes</h3>
+      <h3>Se usa en ${usedBy.length} recetas</h3>
       <ul>
         ${usedBy.slice(0, 50).map(r => {
           const target = items[r.output];
@@ -269,7 +286,7 @@
       </ul>
     `;
     if (usedBy.length > 50) {
-      html += `<p style="color:#9fb0c7;font-size:0.85rem">...and ${usedBy.length - 50} more.</p>`;
+      html += `<p style="color:#9fb0c7;font-size:0.85rem">...y ${usedBy.length - 50} más.</p>`;
     }
     itemInfoEl.innerHTML = html;
   }
@@ -284,10 +301,10 @@
         ${outputItem.iconFile ? `<img src="${outputItem.iconFile}" alt="">` : ''}
         <div>
           <h2>${escapeHtml(outputItem.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(outputItem.category)} · Tier ${outputItem.tier}</div>
+          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(categoryLabel(outputItem.category))} · Nivel ${outputItem.tier}</div>
         </div>
       </div>
-      <h3>Needs ${inputItem.displayName}</h3>
+      <h3>Necesita ${inputItem.displayName}</h3>
     `;
 
     for (const r of relevant) {
@@ -305,7 +322,7 @@
 
   function clearSelection() {
     matrixEl.querySelectorAll('.highlighted-col').forEach(td => td.classList.remove('highlighted-col'));
-    itemInfoEl.innerHTML = '<p>Click a row or cell to see details.</p>';
+    itemInfoEl.innerHTML = '<p>Haz clic en una fila o celda para ver los detalles.</p>';
     searchInput.value = '';
     categorySelect.value = '';
     renderMatrix();
