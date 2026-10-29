@@ -13,7 +13,7 @@
 
   let data;
   try {
-    const res = await fetch(`/public/data/foxhole-data.json?v=${Date.now()}`);
+    const res = await fetch(`/data/foxhole-data.json?v=${Date.now()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     data = await res.json();
   } catch (err) {
