@@ -86,7 +86,7 @@
 
   function matchesRowFaction(item, faction) {
     if (!faction) return true;
-    return !item.faction || item.faction === faction;
+    return !item.faction || item.faction === 'Neutral' || item.faction === faction;
   }
 
   function matchesColumnFaction(item, faction) {
