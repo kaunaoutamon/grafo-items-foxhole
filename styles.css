@@ -160,6 +160,14 @@ main {
   z-index: 2;
 }
 
+#matrix td.row-header {
+  cursor: pointer;
+}
+
+#matrix td.row-header:hover {
+  background: #252a33;
+}
+
 #matrix th.row-header {
   z-index: 3;
 }
