@@ -21,13 +21,64 @@
 
     <main class="calculator-main">
       <div class="calculator-layout">
-        <section class="calculator-card" aria-labelledby="comparisons-heading">
-          <p class="home-eyebrow">Facility Assistant</p>
+        <section class="calculator-card comparison-setup" aria-labelledby="comparisons-heading">
           <h1 id="comparisons-heading" class="page-title">Comparativas</h1>
-          <p class="calculator-intro">Esta sección será para comparar ítems y sus requisitos. La navegación ya está lista; los criterios de comparación quedan por definir.</p>
+          <p class="calculator-intro">Elegí una categoría para comparar ítems del mismo tipo. Después seleccioná la facción y el ítem de cada lado.</p>
+          <div class="comparison-category-field">
+            <span class="comparison-field-label">Categoría a comparar</span>
+            <select id="comparison-category" class="form-control select-control" aria-label="Categoría a comparar">
+              <option value="">Seleccioná una categoría...</option>
+            </select>
+          </div>
+          <p id="comparison-status" class="comparison-status" role="status">Cargando catálogo de propiedades...</p>
+        </section>
+
+        <section id="comparison-selection" class="comparison-selection" aria-label="Selección de ítems" hidden>
+          <article class="calculator-card comparison-pane">
+            <h2>Ítem A</h2>
+            <div class="comparison-field">
+              <span class="comparison-field-label">Facción</span>
+              <select id="left-faction" class="form-control select-control" aria-label="Facción del ítem A" disabled>
+                <option value="">Seleccioná una facción...</option>
+              </select>
+            </div>
+            <div class="comparison-field">
+              <span class="comparison-field-label">Ítem o vehículo</span>
+              <select id="left-item" class="form-control select-control" aria-label="Ítem A" disabled>
+                <option value="">Seleccioná un ítem...</option>
+              </select>
+            </div>
+          </article>
+
+          <article class="calculator-card comparison-pane">
+            <h2>Ítem B</h2>
+            <div class="comparison-field">
+              <span class="comparison-field-label">Facción</span>
+              <select id="right-faction" class="form-control select-control" aria-label="Facción del ítem B" disabled>
+                <option value="">Seleccioná una facción...</option>
+              </select>
+            </div>
+            <div class="comparison-field">
+              <span class="comparison-field-label">Ítem o vehículo</span>
+              <select id="right-item" class="form-control select-control" aria-label="Ítem B" disabled>
+                <option value="">Seleccioná un ítem...</option>
+              </select>
+            </div>
+          </article>
+        </section>
+
+        <section id="comparison-results" class="calculator-card comparison-results" aria-labelledby="comparison-results-heading" hidden>
+          <h2 id="comparison-results-heading">Comparación propiedad por propiedad</h2>
+          <p class="comparison-note">Se marca el ganador en cada propiedad con criterio definido: mayor en prestaciones y menor en costes o consumo. Los datos descriptivos no tienen ganador; no hay un ganador global.</p>
+          <div id="compared-items" class="compared-items"></div>
+          <div id="comparison-properties" class="comparison-properties"></div>
         </section>
       </div>
     </main>
   </div>
+  <script src="themed-dropdown.js"></script>
+  <script src="ui-utils.js"></script>
+  <script src="comparison-core.js"></script>
+  <script src="comparisons.js"></script>
 </body>
 </html>
