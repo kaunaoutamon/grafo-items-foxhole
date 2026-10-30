@@ -1,5 +1,36 @@
 :root {
   --dropdown-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5 7 5 5 5-5' stroke='%23f0b040' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  --scrollbar-track: #181b21;
+  --scrollbar-thumb: #4a505d;
+  --scrollbar-thumb-hover: #f0b040;
+}
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+*::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 8px;
+  background: var(--scrollbar-thumb);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }
 
 .form-control {
@@ -222,20 +253,6 @@
   padding: 0.7rem 0.75rem;
   color: #9fb0c7;
   font-size: 0.9rem;
-}
-
-.themed-dropdown-menu::-webkit-scrollbar {
-  width: 8px;
-}
-
-.themed-dropdown-menu::-webkit-scrollbar-track {
-  background: #0f1115;
-}
-
-.themed-dropdown-menu::-webkit-scrollbar-thumb {
-  border: 2px solid #181b21;
-  border-radius: 8px;
-  background: #4a505d;
 }
 
 @media (max-width: 840px) {
