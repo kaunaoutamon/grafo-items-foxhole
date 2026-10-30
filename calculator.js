@@ -17,22 +17,8 @@
 
   const projectItems = [];
   const selectedRecipes = {};
-  const extractionEnergyItems = new Set(['Petrol', 'FacilityOil1', 'FacilityOil2', 'FacilityCoal1']);
+  const { displayItemName, escapeHtml } = FoxholeUI;
   const numberFormat = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 });
-
-  function escapeHtml(value) {
-    return String(value ?? '').replace(/[&<>"']/g, character => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    })[character]);
-  }
-
-  function displayName(codeName, items) {
-    return items[codeName]?.displayName || codeName;
-  }
 
   function formatQuantity(quantity) {
     return numberFormat.format(quantity);
@@ -72,10 +58,10 @@
     return;
   }
 
-  const recipeIndex = FoxholeCalculator.createRecipeIndex(data.recipes);
+  const projectCalculator = FoxholeCalculator.createProjectCalculator(data);
+  const recipeIndex = projectCalculator.recipeIndex;
   const itemLabels = makeItemLabels(data.items, recipeIndex);
-  const itemByLabel = new Map([...itemLabels.entries()].map(([label, item]) => [label, item]));
-  const searchableItems = [...itemLabels.entries()].map(([label, item]) => ({ label, item }));
+  const searchableItems = [...itemLabels].map(([label, item]) => ({ label, item }));
   let visibleSuggestions = [];
   let activeSuggestionIndex = -1;
 
@@ -158,23 +144,22 @@
         <div class="project-row" data-project-id="${entry.id}">
           <div class="project-item-name">
             ${item.iconFile ? `<img src="${escapeHtml(item.iconFile)}" alt="">` : ''}
-            <span>${escapeHtml(displayName(entry.codeName, data.items))}</span>
+            <span>${escapeHtml(displayItemName(entry.codeName, data.items))}</span>
           </div>
-          <label class="visually-hidden" for="project-quantity-${entry.id}">Cantidad de ${escapeHtml(displayName(entry.codeName, data.items))}</label>
+          <label class="visually-hidden" for="project-quantity-${entry.id}">Cantidad de ${escapeHtml(displayItemName(entry.codeName, data.items))}</label>
           <input id="project-quantity-${entry.id}" class="form-control project-quantity" data-action="quantity" type="number" min="1" step="1" value="${entry.quantity}">
-          <button class="remove-project-item" data-action="remove" type="button" aria-label="Quitar ${escapeHtml(displayName(entry.codeName, data.items))}">Quitar</button>
+          <button class="remove-project-item" data-action="remove" type="button" aria-label="Quitar ${escapeHtml(displayItemName(entry.codeName, data.items))}">Quitar</button>
         </div>
       `;
     }).join('');
   }
 
   function recipeLabel(recipe) {
-    const isResourceMine = /^Facility Resource Mine\b/i.test(recipe.building || '');
     const inputs = recipe.inputs.map(input => {
-      const energyTag = isResourceMine && extractionEnergyItems.has(input.codeName) ? ' (energía)' : '';
-      return `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}${energyTag}`;
+      const energyTag = FoxholeCalculator.isExtractionEnergyInput(recipe, input) ? ' (energía)' : '';
+      return `${formatQuantity(input.quantity)}× ${displayItemName(input.codeName, data.items)}${energyTag}`;
     }).join(', ') || 'Sin materiales de entrada';
-    return `${recipe.building || 'Receta'} · ${inputs} → ${formatQuantity(recipe.outputQty)}× ${displayName(recipe.output, data.items)}`;
+    return `${recipe.building || 'Receta'} · ${inputs} → ${formatQuantity(recipe.outputQty)}× ${displayItemName(recipe.output, data.items)}`;
   }
 
   function renderChoices(choices) {
@@ -186,10 +171,10 @@
 
     recipeChoices.innerHTML = choices.map(choice => `
       <div class="recipe-choice">
-        <span class="recipe-choice-name">${escapeHtml(displayName(choice.codeName, data.items))}</span>
+        <span class="recipe-choice-name">${escapeHtml(displayItemName(choice.codeName, data.items))}</span>
         <div class="recipe-choice-field">
           <span>Elegí una receta</span>
-          <select class="form-control select-control" data-recipe-output="${escapeHtml(choice.codeName)}" aria-label="Receta para ${escapeHtml(displayName(choice.codeName, data.items))}" required>
+          <select class="form-control select-control" data-recipe-output="${escapeHtml(choice.codeName)}" aria-label="Receta para ${escapeHtml(displayItemName(choice.codeName, data.items))}" required>
             <option value="">Seleccioná una receta...</option>
             ${choice.recipes.map(recipe => `
               <option value="${escapeHtml(recipe.id)}" ${recipe.id === choice.selectedId ? 'selected' : ''}>
@@ -218,7 +203,7 @@
 
     if (result.cycles.length > 0) {
       calculationStatus.className = 'calculation-status error';
-      calculationStatus.textContent = `No se pudo completar el desglose porque hay una cadena de recetas circular: ${result.cycles.map(cycle => cycle.map(code => displayName(code, data.items)).join(' → ')).join('; ')}.`;
+      calculationStatus.textContent = `No se pudo completar el desglose porque hay una cadena de recetas circular: ${result.cycles.map(cycle => cycle.map(code => displayItemName(code, data.items)).join(' → ')).join('; ')}.`;
       materialLayers.innerHTML = '';
       energySection.hidden = true;
       energyConsumption.innerHTML = '';
@@ -233,7 +218,7 @@
 
     function renderMaterialRows(materialMap, emptyMessage) {
       const sortedMaterials = [...materialMap.entries()].sort((a, b) =>
-        displayName(a[0], data.items).localeCompare(displayName(b[0], data.items))
+        displayItemName(a[0], data.items).localeCompare(displayItemName(b[0], data.items))
       );
 
       return sortedMaterials.map(([codeName, quantity]) => {
@@ -242,7 +227,7 @@
           <div class="material-total-row">
             <div class="material-name">
               ${item.iconFile ? `<img src="${escapeHtml(item.iconFile)}" alt="">` : ''}
-              <span>${escapeHtml(displayName(codeName, data.items))}</span>
+              <span>${escapeHtml(displayItemName(codeName, data.items))}</span>
             </div>
             <span class="material-quantity">${formatQuantity(quantity)}</span>
           </div>
@@ -276,12 +261,12 @@
     productionSteps.innerHTML = `
       <ul class="production-steps">
         ${result.steps.map(step => {
-          const itemName = displayName(step.codeName, data.items);
+          const itemName = displayItemName(step.codeName, data.items);
           const inputSummary = step.inputs.map(input =>
-            `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}`
+            `${formatQuantity(input.quantity)}× ${displayItemName(input.codeName, data.items)}`
           ).join(', ');
           const energySummary = step.energyInputs.map(input =>
-            `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}`
+            `${formatQuantity(input.quantity)}× ${displayItemName(input.codeName, data.items)}`
           ).join(', ');
           const surplus = step.surplus > 0 ? ` · sobran ${formatQuantity(step.surplus)}` : '';
           return `
@@ -297,14 +282,14 @@
   }
 
   function recalculate() {
-    const result = FoxholeCalculator.calculateProject(projectItems, data, selectedRecipes);
+    const result = projectCalculator.calculateProject(projectItems, selectedRecipes);
     renderChoices(result.choices);
     renderResults(result);
   }
 
   addForm.addEventListener('submit', event => {
     event.preventDefault();
-    const item = itemByLabel.get(itemSearch.value.trim());
+    const item = itemLabels.get(itemSearch.value.trim());
     const quantity = Number(quantityInput.value);
     if (!item || !Number.isInteger(quantity) || quantity < 1) {
       itemSearch.setCustomValidity(item ? 'Ingresá una cantidad entera mayor que cero.' : 'Elegí un ítem de la lista.');

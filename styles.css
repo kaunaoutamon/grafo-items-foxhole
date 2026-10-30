@@ -358,6 +358,29 @@ main {
   border-radius: 4px;
 }
 
+#sidebar .item-meta {
+  color: #9fb0c7;
+  font-size: 0.85rem;
+}
+
+.empty-state {
+  padding: 2rem;
+  color: #9fb0c7;
+}
+
+.muted-text {
+  color: #9fb0c7;
+}
+
+.muted-small {
+  color: #9fb0c7;
+  font-size: 0.85rem;
+}
+
+.tier-label {
+  margin-left: 0.25rem;
+}
+
 .project-item-name,
 .material-name {
   display: flex;

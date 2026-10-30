@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { calculateProject, createRecipeIndex } = require('../calculator-core.js');
+const { calculateProject, createProjectCalculator, createRecipeIndex } = require('../calculator-core.js');
 
 function makeData(recipes) {
   const items = {};
@@ -44,6 +44,18 @@ test('rounds output batches up and scales each input by the batch count', () => 
   assert.equal(result.materials.get('Metal'), 6);
   assert.equal(result.steps[0].batches, 2);
   assert.equal(result.steps[0].surplus, 1);
+});
+
+test('reuses a prebuilt recipe index across project recalculations', () => {
+  const data = makeData([
+    { output: 'Vehicle', outputQty: 1, building: 'Factory', inputs: [{ codeName: 'Metal', quantity: 3 }] }
+  ]);
+  const calculator = createProjectCalculator(data);
+  const recipeIndex = calculator.recipeIndex;
+
+  assert.equal(calculator.calculateProject([{ codeName: 'Vehicle', quantity: 1 }]).materials.get('Metal'), 3);
+  assert.equal(calculator.calculateProject([{ codeName: 'Vehicle', quantity: 2 }]).materials.get('Metal'), 6);
+  assert.equal(calculator.recipeIndex, recipeIndex);
 });
 
 test('requires a user choice when an item has distinct recipes', () => {

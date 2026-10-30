@@ -1,4 +1,5 @@
 (async function () {
+  const { displayItemName, escapeHtml } = FoxholeUI;
   const matrixEl = document.getElementById('matrix');
   const matrixContainer = document.getElementById('matrix-container');
   const itemInfoEl = document.getElementById('item-info');
@@ -26,27 +27,19 @@
   const items = data.items;
   const recipes = data.recipes;
 
-  const categoryColors = {
-    HeavyAmmo: '#e74c3c',
-    HeavyArms: '#e67e22',
-    SmallArms: '#f1c40f',
-    Utility: '#2ecc71',
-    Supplies: '#3498db',
-    Medical: '#ff9ff3',
-    Uniforms: '#9b59b6',
-    Parts: '#95a5a6',
-    Other: '#7f8c8d'
-  };
+  const relations = Object.create(null);
+  const outputs = new Set();
+  const recipesByOutput = new Map();
+  const recipesByInput = new Map();
 
-  function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-  }
-
-  // Calcular relaciones directas output -> input con cantidades
-  const relations = {};
+  // Indexar recetas una vez para renderizar relaciones y detalles sin volver a recorrerlas.
   for (const recipe of recipes) {
-    if (!relations[recipe.output]) relations[recipe.output] = {};
+    outputs.add(recipe.output);
+    if (!recipesByOutput.has(recipe.output)) recipesByOutput.set(recipe.output, []);
+    recipesByOutput.get(recipe.output).push(recipe);
+
+    if (!relations[recipe.output]) relations[recipe.output] = Object.create(null);
+    const indexedInputs = new Set();
     for (const input of recipe.inputs) {
       const existing = relations[recipe.output][input.codeName];
       if (!existing || input.quantity < existing.quantity) {
@@ -55,15 +48,12 @@
           building: recipe.building
         };
       }
-    }
-  }
 
-  // Determinar outputs e inputs
-  const outputs = new Set();
-  const inputs = new Set();
-  for (const recipe of recipes) {
-    outputs.add(recipe.output);
-    for (const input of recipe.inputs) inputs.add(input.codeName);
+      if (indexedInputs.has(input.codeName)) continue;
+      indexedInputs.add(input.codeName);
+      if (!recipesByInput.has(input.codeName)) recipesByInput.set(input.codeName, []);
+      recipesByInput.get(input.codeName).push(recipe);
+    }
   }
 
   const allItems = Object.values(items);
@@ -87,12 +77,7 @@
     });
   }
 
-  function matchesRowFaction(item, faction) {
-    if (!faction) return true;
-    return !item.faction || item.faction === 'Neutral' || item.faction === faction;
-  }
-
-  function matchesColumnFaction(item, faction) {
+  function matchesFaction(item, faction) {
     if (!faction) return true;
     return !item.faction || item.faction === 'Neutral' || item.faction === faction;
   }
@@ -100,7 +85,7 @@
   function getRowItems(filterCategory = '', searchTerm = '', filterFaction = '') {
     let list = allItems.filter(i => outputs.has(i.codeName));
     if (filterCategory) list = list.filter(i => i.category === filterCategory);
-    if (filterFaction) list = list.filter(i => matchesRowFaction(i, filterFaction));
+    if (filterFaction) list = list.filter(i => matchesFaction(i, filterFaction));
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       list = list.filter(i =>
@@ -117,7 +102,7 @@
       const rels = relations[row.codeName] || {};
       for (const inputCode in rels) usedInputs.add(inputCode);
     }
-    return sortItems(allItems.filter(i => usedInputs.has(i.codeName) && matchesColumnFaction(i, filterFaction)));
+    return sortItems(allItems.filter(i => usedInputs.has(i.codeName) && matchesFaction(i, filterFaction)));
   }
 
   function renderMatrix() {
@@ -128,7 +113,7 @@
     const colItems = getColItems(rowItems, filterFaction);
 
     if (rowItems.length === 0) {
-      matrixEl.innerHTML = '<div style="padding:2rem;color:#9fb0c7">Ningún ítem coincide con los filtros.</div>';
+      matrixEl.innerHTML = '<div class="empty-state">Ningún ítem coincide con los filtros.</div>';
       return;
     }
 
@@ -178,7 +163,7 @@
       th.innerHTML = `
         ${row.iconFile ? `<img class="row-icon" src="${row.iconFile}" alt="">` : ''}
         <span title="${escapeHtml(row.description)}">${escapeHtml(row.displayName)}</span>
-        <span style="color:#9fb0c7;margin-left:0.25rem" title="Nivel ${row.tier}">T${row.tier}</span>
+        <span class="muted-text tier-label" title="Nivel ${row.tier}">T${row.tier}</span>
       `;
       th.addEventListener('click', () => showItemDetails(row.codeName));
       tr.appendChild(th);
@@ -211,21 +196,31 @@
     showInputDetails(colCode);
   }
 
+  function renderItemHeader(item, subtitle) {
+    return `
+      <div class="item-header">
+        ${item.iconFile ? `<img src="${escapeHtml(item.iconFile)}" alt="">` : ''}
+        <div>
+          <h2>${escapeHtml(item.displayName)}</h2>
+          <div class="item-meta">${escapeHtml(subtitle)}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function getRecipesUsing(codeName) {
+    return recipesByInput.get(codeName) || [];
+  }
+
   function showItemDetails(codeName) {
     const item = items[codeName];
     if (!item) return;
 
-    const outputRecipes = recipes.filter(r => r.output === codeName);
-    const inputRecipes = recipes.filter(r => r.inputs.some(i => i.codeName === codeName));
+    const outputRecipes = recipesByOutput.get(codeName) || [];
+    const inputRecipes = getRecipesUsing(codeName);
 
     let html = `
-      <div class="item-header">
-        ${item.iconFile ? `<img src="${item.iconFile}" alt="">` : ''}
-        <div>
-          <h2>${escapeHtml(item.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(item.category)} · Nivel ${item.tier}</div>
-        </div>
-      </div>
+      ${renderItemHeader(item, `${item.category} · Nivel ${item.tier}`)}
       <p>${escapeHtml(item.description)}</p>
     `;
 
@@ -236,24 +231,23 @@
           <div class="recipe">
             <h4>${escapeHtml(r.building)}</h4>
             <ul>
-              ${r.inputs.map(i => `<li>${i.quantity}× ${escapeHtml(items[i.codeName]?.displayName || i.codeName)}</li>`).join('')}
+              ${r.inputs.map(i => `<li>${i.quantity}× ${escapeHtml(displayItemName(i.codeName, items))}</li>`).join('')}
             </ul>
           </div>
         `;
       }
       if (outputRecipes.length > 20) {
-        html += `<p style="color:#9fb0c7;font-size:0.85rem">...y ${outputRecipes.length - 20} recetas más.</p>`;
+        html += `<p class="muted-small">...y ${outputRecipes.length - 20} recetas más.</p>`;
       }
     }
 
     if (inputRecipes.length > 0) {
       html += '<h3>Se usa en</h3><ul>';
       for (const r of inputRecipes.slice(0, 40)) {
-        const target = items[r.output];
-        html += `<li>${escapeHtml(target?.displayName || r.output)} <span style="color:#9fb0c7">(${escapeHtml(r.building)})</span></li>`;
+        html += `<li>${escapeHtml(displayItemName(r.output, items))} <span class="muted-text">(${escapeHtml(r.building)})</span></li>`;
       }
       if (inputRecipes.length > 40) {
-        html += `<li style="color:#9fb0c7">...y ${inputRecipes.length - 40} más.</li>`;
+        html += `<li class="muted-text">...y ${inputRecipes.length - 40} más.</li>`;
       }
       html += '</ul>';
     }
@@ -264,28 +258,21 @@
   function showInputDetails(codeName) {
     const item = items[codeName];
     if (!item) return;
-    const usedBy = recipes.filter(r => r.inputs.some(i => i.codeName === codeName));
+    const usedBy = getRecipesUsing(codeName);
 
     let html = `
-      <div class="item-header">
-        ${item.iconFile ? `<img src="${item.iconFile}" alt="">` : ''}
-        <div>
-          <h2>${escapeHtml(item.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(item.category)} · Material de entrada</div>
-        </div>
-      </div>
+      ${renderItemHeader(item, `${item.category} · Material de entrada`)}
       <p>${escapeHtml(item.description)}</p>
       <h3>Se usa en ${usedBy.length} recetas</h3>
       <ul>
         ${usedBy.slice(0, 50).map(r => {
-          const target = items[r.output];
           const input = r.inputs.find(i => i.codeName === codeName);
-          return `<li>${input?.quantity || ''}× ${escapeHtml(target?.displayName || r.output)} <span style="color:#9fb0c7">(${escapeHtml(r.building)})</span></li>`;
+          return `<li>${input?.quantity || ''}× ${escapeHtml(displayItemName(r.output, items))} <span class="muted-text">(${escapeHtml(r.building)})</span></li>`;
         }).join('')}
       </ul>
     `;
     if (usedBy.length > 50) {
-      html += `<p style="color:#9fb0c7;font-size:0.85rem">...y ${usedBy.length - 50} más.</p>`;
+      html += `<p class="muted-small">...y ${usedBy.length - 50} más.</p>`;
     }
     itemInfoEl.innerHTML = html;
   }
@@ -293,17 +280,12 @@
   function showRelationDetails(outputCode, inputCode) {
     const outputItem = items[outputCode];
     const inputItem = items[inputCode];
-    const relevant = recipes.filter(r => r.output === outputCode && r.inputs.some(i => i.codeName === inputCode));
+    const relevant = (recipesByOutput.get(outputCode) || [])
+      .filter(recipe => recipe.inputs.some(input => input.codeName === inputCode));
 
     let html = `
-      <div class="item-header">
-        ${outputItem.iconFile ? `<img src="${outputItem.iconFile}" alt="">` : ''}
-        <div>
-          <h2>${escapeHtml(outputItem.displayName)}</h2>
-          <div style="color:#9fb0c7;font-size:0.85rem">${escapeHtml(outputItem.category)} · Nivel ${outputItem.tier}</div>
-        </div>
-      </div>
-      <h3>Necesita ${inputItem.displayName}</h3>
+      ${renderItemHeader(outputItem, `${outputItem.category} · Nivel ${outputItem.tier}`)}
+      <h3>Necesita ${escapeHtml(inputItem.displayName)}</h3>
     `;
 
     for (const r of relevant) {

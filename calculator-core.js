@@ -28,7 +28,7 @@
     return `${output}:${JSON.stringify([
       recipe.building || '',
       Number(recipe.outputQty) || 1,
-      normalizeInputs(recipe.inputs)
+      recipe.inputs
     ])}`;
   }
 
@@ -53,8 +53,7 @@
     ]));
   }
 
-  function calculateProject(projectItems, data, selectedRecipes = {}) {
-    const recipeIndex = createRecipeIndex(data.recipes);
+  function calculateProjectWithIndex(projectItems, data, selectedRecipes, recipeIndex) {
     const project = (projectItems || []).filter(entry =>
       entry && entry.codeName && Number.isFinite(Number(entry.quantity)) && Number(entry.quantity) > 0
     );
@@ -258,5 +257,24 @@
     };
   }
 
-  return { calculateProject, createRecipeIndex };
+  function calculateProject(projectItems, data, selectedRecipes = {}) {
+    return calculateProjectWithIndex(
+      projectItems,
+      data,
+      selectedRecipes,
+      createRecipeIndex(data.recipes)
+    );
+  }
+
+  function createProjectCalculator(data) {
+    const recipeIndex = createRecipeIndex(data.recipes);
+    return {
+      recipeIndex,
+      calculateProject(projectItems, selectedRecipes = {}) {
+        return calculateProjectWithIndex(projectItems, data, selectedRecipes, recipeIndex);
+      }
+    };
+  }
+
+  return { calculateProject, createProjectCalculator, createRecipeIndex, isExtractionEnergyInput };
 });
