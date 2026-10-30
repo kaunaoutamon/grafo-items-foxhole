@@ -130,12 +130,19 @@
     closeItemOptions();
   }
 
-  itemOptions.addEventListener('mousedown', event => {
-    if (event.target.closest('[data-item-label]')) event.preventDefault();
+  itemOptions.addEventListener('pointerdown', event => {
+    const option = event.target instanceof Element
+      ? event.target.closest('[data-item-label]')
+      : null;
+    if (!option) return;
+    event.preventDefault();
+    chooseItemSuggestion(option.dataset.itemLabel);
   });
 
   itemOptions.addEventListener('click', event => {
-    const option = event.target.closest('[data-item-label]');
+    const option = event.target instanceof Element
+      ? event.target.closest('[data-item-label]')
+      : null;
     if (option) chooseItemSuggestion(option.dataset.itemLabel);
   });
 
