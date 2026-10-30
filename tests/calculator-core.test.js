@@ -27,8 +27,8 @@ test('combines shared intermediate demand before rounding production batches', (
 
   assert.equal(result.ready, true);
   assert.equal(result.materials.get('Metal'), 5);
-  assert.equal(result.primaryMaterials.get('Part'), 2);
-  assert.equal(result.secondaryMaterials.get('Metal'), 5);
+  assert.equal(result.materialLayers.get(1).get('Part'), 2);
+  assert.equal(result.materialLayers.get(2).get('Metal'), 5);
   assert.equal(result.steps.find(step => step.codeName === 'Part').quantity, 2);
   assert.equal(result.steps.find(step => step.codeName === 'Part').batches, 1);
 });
@@ -78,7 +78,7 @@ test('shows known first-level materials while a downstream recipe is unselected'
   const result = calculateProject([{ codeName: 'Vehicle', quantity: 1 }], data);
 
   assert.equal(result.ready, false);
-  assert.equal(result.primaryMaterials.get('BasicMaterials'), 12);
+  assert.equal(result.materialLayers.get(1).get('BasicMaterials'), 12);
   assert.equal(result.missingChoices[0].codeName, 'BasicMaterials');
 });
 
@@ -92,11 +92,51 @@ test('counts bunker excavations without expanding them into factory materials', 
   const result = calculateProject([{ codeName: 'FortT1', quantity: 2 }], data);
 
   assert.equal(result.ready, true);
-  assert.equal(result.primaryMaterials.get('Excavation'), 150);
-  assert.equal(result.secondaryMaterials.size, 0);
+  assert.equal(result.materialLayers.get(1).get('Excavation'), 150);
+  assert.equal(result.materialLayers.size, 1);
   assert.equal(result.materials.get('Excavation'), 150);
+  assert.equal(result.energyConsumption.size, 0);
   assert.equal(result.materials.has('Cloth'), false);
   assert.equal(result.materials.has('Metal'), false);
+
+  const excavationProject = calculateProject([{ codeName: 'Excavation', quantity: 20 }], data);
+  assert.equal(excavationProject.materialLayers.get(1).get('Excavation'), 20);
+});
+
+test('places a material in its earliest layer only and sums its deeper demand there', () => {
+  const data = makeData([
+    { output: 'Vehicle', outputQty: 1, building: 'Factory', inputs: [
+      { codeName: 'PartA', quantity: 2 },
+      { codeName: 'Metal', quantity: 1 }
+    ] },
+    { output: 'PartA', outputQty: 1, building: 'Workshop', inputs: [{ codeName: 'PartB', quantity: 3 }] },
+    { output: 'PartB', outputQty: 1, building: 'Workshop', inputs: [
+      { codeName: 'Metal', quantity: 4 },
+      { codeName: 'Ore', quantity: 1 }
+    ] }
+  ]);
+
+  const result = calculateProject([{ codeName: 'Vehicle', quantity: 1 }], data);
+
+  assert.equal(result.materialLayers.get(1).get('Metal'), 25);
+  assert.equal(result.materialLayers.get(1).get('PartA'), 2);
+  assert.equal(result.materialLayers.get(2).get('PartB'), 6);
+  assert.equal(result.materialLayers.get(3).get('Ore'), 6);
+  assert.equal(result.materialLayers.get(3).has('Metal'), false);
+});
+
+test('reports resource-mine fuel as energy rather than as a material layer', () => {
+  const data = makeData([
+    { output: 'Vehicle', outputQty: 1, building: 'Factory', inputs: [{ codeName: 'Metal', quantity: 100 }] },
+    { output: 'Metal', outputQty: 50, building: 'Facility Resource Mine (Salvage)', inputs: [{ codeName: 'Petrol', quantity: 4 }] }
+  ]);
+
+  const result = calculateProject([{ codeName: 'Vehicle', quantity: 1 }], data);
+
+  assert.equal(result.materialLayers.get(1).get('Metal'), 100);
+  assert.equal(result.materialLayers.has(2), false);
+  assert.equal(result.energyConsumption.get('Petrol'), 8);
+  assert.equal(result.materials.has('Petrol'), false);
 });
 
 test('deduplicates identical recipes but retains different production methods', () => {

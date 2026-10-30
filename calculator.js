@@ -8,18 +8,16 @@
   const recipeChoices = document.getElementById('recipe-choices');
   const resultsSection = document.getElementById('results-section');
   const calculationStatus = document.getElementById('calculation-status');
-  const primaryMaterialsSection = document.getElementById('primary-materials-section');
-  const primaryMaterials = document.getElementById('primary-materials');
-  const secondaryMaterialsSection = document.getElementById('secondary-materials-section');
-  const secondaryMaterials = document.getElementById('secondary-materials');
-  const baseMaterialsSection = document.getElementById('base-materials-section');
-  const baseMaterials = document.getElementById('base-materials');
+  const materialLayers = document.getElementById('material-layers');
+  const energySection = document.getElementById('energy-section');
+  const energyConsumption = document.getElementById('energy-consumption');
   const productionDetails = document.getElementById('production-details');
   const productionSteps = document.getElementById('production-steps');
   const loading = document.getElementById('calculator-loading');
 
   const projectItems = [];
   const selectedRecipes = {};
+  const extractionEnergyItems = new Set(['Petrol', 'FacilityOil1', 'FacilityOil2', 'FacilityCoal1']);
   const numberFormat = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 });
 
   function escapeHtml(value) {
@@ -107,9 +105,11 @@
   }
 
   function recipeLabel(recipe) {
-    const inputs = recipe.inputs.map(input =>
-      `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}`
-    ).join(', ') || 'Sin materiales de entrada';
+    const isResourceMine = /^Facility Resource Mine\b/i.test(recipe.building || '');
+    const inputs = recipe.inputs.map(input => {
+      const energyTag = isResourceMine && extractionEnergyItems.has(input.codeName) ? ' (energía)' : '';
+      return `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}${energyTag}`;
+    }).join(', ') || 'Sin materiales de entrada';
     return `${recipe.building || 'Receta'} · ${inputs} → ${formatQuantity(recipe.outputQty)}× ${displayName(recipe.output, data.items)}`;
   }
 
@@ -142,12 +142,9 @@
     resultsSection.hidden = projectItems.length === 0;
     if (projectItems.length === 0) {
       calculationStatus.textContent = '';
-      primaryMaterialsSection.hidden = true;
-      primaryMaterials.innerHTML = '';
-      secondaryMaterialsSection.hidden = true;
-      secondaryMaterials.innerHTML = '';
-      baseMaterialsSection.hidden = true;
-      baseMaterials.innerHTML = '';
+      materialLayers.innerHTML = '';
+      energySection.hidden = true;
+      energyConsumption.innerHTML = '';
       productionDetails.hidden = true;
       return;
     }
@@ -155,20 +152,17 @@
     if (result.cycles.length > 0) {
       calculationStatus.className = 'calculation-status error';
       calculationStatus.textContent = `No se pudo completar el desglose porque hay una cadena de recetas circular: ${result.cycles.map(cycle => cycle.map(code => displayName(code, data.items)).join(' → ')).join('; ')}.`;
-      primaryMaterialsSection.hidden = true;
-      primaryMaterials.innerHTML = '';
-      secondaryMaterialsSection.hidden = true;
-      secondaryMaterials.innerHTML = '';
-      baseMaterialsSection.hidden = true;
-      baseMaterials.innerHTML = '';
+      materialLayers.innerHTML = '';
+      energySection.hidden = true;
+      energyConsumption.innerHTML = '';
       productionDetails.hidden = true;
       return;
     }
 
     calculationStatus.className = 'calculation-status';
     calculationStatus.textContent = result.ready
-      ? 'Los materiales compartidos se agrupan y las tandas se redondean para cubrir las cantidades solicitadas.'
-      : 'Elegí las recetas pendientes para completar el cálculo. Mientras tanto, se muestran los insumos ya conocidos.';
+      ? 'Cada material aparece en una sola capa. Las tandas se redondean y el combustible de extracción se informa aparte.'
+      : 'Elegí las recetas pendientes para completar el cálculo. Cada material aparece una sola vez y el combustible de extracción va aparte.';
 
     function renderMaterialRows(materialMap, emptyMessage) {
       const sortedMaterials = [...materialMap.entries()].sort((a, b) =>
@@ -189,29 +183,26 @@
       }).join('') || `<p class="project-empty">${escapeHtml(emptyMessage)}</p>`;
     }
 
-    primaryMaterialsSection.hidden = result.primaryMaterials.size === 0;
-    primaryMaterials.innerHTML = renderMaterialRows(
-      result.primaryMaterials,
-      'No hay materiales primarios para mostrar.'
-    );
-    secondaryMaterialsSection.hidden = result.secondaryMaterials.size === 0;
-    secondaryMaterials.innerHTML = renderMaterialRows(
-      result.secondaryMaterials,
-      'No hay materiales secundarios para mostrar.'
-    );
-
-    function mapsEqual(first, second) {
-      return first.size === second.size && [...first].every(([codeName, quantity]) =>
-        second.get(codeName) === quantity
-      );
+    const ordinalNames = ['primarios', 'secundarios', 'terciarios', 'cuaternarios'];
+    function layerTitle(depth) {
+      return ordinalNames[depth - 1]
+        ? `Materiales ${ordinalNames[depth - 1]}`
+        : `Materiales de nivel ${depth}`;
     }
 
-    baseMaterialsSection.hidden = result.materials.size === 0 ||
-      mapsEqual(result.materials, result.primaryMaterials) ||
-      mapsEqual(result.materials, result.secondaryMaterials);
-    baseMaterials.innerHTML = renderMaterialRows(
-      result.materials,
-      result.ready ? 'No hay materiales base para mostrar.' : 'Todavía no se puede completar este nivel; elegí las recetas pendientes.'
+    materialLayers.innerHTML = [...result.materialLayers.entries()]
+      .sort(([depthA], [depthB]) => depthA - depthB)
+      .map(([depth, materials]) => `
+        <section class="material-group">
+          <h3>${layerTitle(depth)}</h3>
+          <div class="materials-total">${renderMaterialRows(materials, 'No hay materiales en esta capa.')}</div>
+        </section>
+      `).join('');
+
+    energySection.hidden = result.energyConsumption.size === 0;
+    energyConsumption.innerHTML = renderMaterialRows(
+      result.energyConsumption,
+      'No se requiere combustible para extracción.'
     );
 
     productionDetails.hidden = result.steps.length === 0;
@@ -222,11 +213,15 @@
           const inputSummary = step.inputs.map(input =>
             `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}`
           ).join(', ');
+          const energySummary = step.energyInputs.map(input =>
+            `${formatQuantity(input.quantity)}× ${displayName(input.codeName, data.items)}`
+          ).join(', ');
           const surplus = step.surplus > 0 ? ` · sobran ${formatQuantity(step.surplus)}` : '';
           return `
             <li class="production-step">
               <strong>${escapeHtml(itemName)}:</strong> ${formatQuantity(step.quantity)} solicitados; ${formatQuantity(step.batches)} tanda(s) de ${escapeHtml(step.recipe.building || 'producción')} producen ${formatQuantity(step.produced)}${surplus}.
               <p>Insumos de esta etapa: ${escapeHtml(inputSummary || 'ninguno')}.</p>
+              ${energySummary ? `<p>Consumo energético: ${escapeHtml(energySummary)}.</p>` : ''}
             </li>
           `;
         }).join('')}

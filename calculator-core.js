@@ -6,6 +6,12 @@
   // Construction sites consume Excavation directly; the data also has an unrelated
   // factory recipe for it, which should not replace the construction requirement.
   const terminalItems = new Set(['Excavation']);
+  const extractionEnergyItems = new Set(['Petrol', 'FacilityOil1', 'FacilityOil2', 'FacilityCoal1']);
+
+  function isExtractionEnergyInput(recipe, input) {
+    return /^Facility Resource Mine\b/i.test(recipe.building || '') &&
+      extractionEnergyItems.has(input.codeName);
+  }
 
   function normalizeInputs(inputs) {
     const totals = new Map();
@@ -88,6 +94,7 @@
       if (chosen) {
         chosenRecipes.set(codeName, chosen);
         for (const input of chosen.inputs) {
+          if (isExtractionEnergyInput(chosen, input)) continue;
           graph.get(codeName).add(input.codeName);
           visit(input.codeName);
         }
@@ -151,11 +158,24 @@
       demand.set(entry.codeName, (demand.get(entry.codeName) || 0) + Number(entry.quantity));
     }
 
+    const depthByItem = new Map();
+    for (const entry of project) depthByItem.set(entry.codeName, 0);
+    for (const codeName of orderedItems) {
+      const depth = depthByItem.get(codeName);
+      if (depth === undefined) continue;
+      for (const inputCode of graph.get(codeName) || []) {
+        const inputDepth = depth + 1;
+        const currentDepth = depthByItem.get(inputCode);
+        if (currentDepth === undefined || inputDepth < currentDepth) {
+          depthByItem.set(inputCode, inputDepth);
+        }
+      }
+    }
+
     const materials = new Map();
     const steps = [];
-    const projectOutputs = new Set(project.map(entry => entry.codeName));
-    const primaryMaterials = new Map();
-    const secondaryMaterials = new Map();
+    const inputRequirements = new Map();
+    const energyConsumption = new Map();
 
     for (const codeName of orderedItems) {
       const quantity = demand.get(codeName) || 0;
@@ -170,13 +190,34 @@
       }
 
       const batches = Math.ceil(quantity / recipe.outputQty);
-      const inputs = recipe.inputs.map(input => ({
-        codeName: input.codeName,
-        quantity: input.quantity * batches
-      }));
+      const inputs = [];
+      const energyInputs = [];
+      const layerDepth = (depthByItem.get(codeName) || 0) + 1;
 
-      for (const input of inputs) {
-        demand.set(input.codeName, (demand.get(input.codeName) || 0) + input.quantity);
+      for (const input of recipe.inputs) {
+        const scaledInput = { codeName: input.codeName, quantity: input.quantity * batches };
+        if (isExtractionEnergyInput(recipe, input)) {
+          energyInputs.push(scaledInput);
+          energyConsumption.set(
+            input.codeName,
+            (energyConsumption.get(input.codeName) || 0) + scaledInput.quantity
+          );
+          continue;
+        }
+
+        inputs.push(scaledInput);
+        demand.set(input.codeName, (demand.get(input.codeName) || 0) + scaledInput.quantity);
+
+        const existing = inputRequirements.get(input.codeName);
+        if (existing) {
+          existing.quantity += scaledInput.quantity;
+          existing.depth = Math.min(existing.depth, layerDepth);
+        } else {
+          inputRequirements.set(input.codeName, {
+            quantity: scaledInput.quantity,
+            depth: layerDepth
+          });
+        }
       }
 
       steps.push({
@@ -186,18 +227,23 @@
         batches,
         produced: batches * recipe.outputQty,
         surplus: batches * recipe.outputQty - quantity,
-        inputs
+        inputs,
+        energyInputs
       });
+    }
 
-      if (projectOutputs.has(codeName)) {
-        for (const input of inputs) {
-          primaryMaterials.set(input.codeName, (primaryMaterials.get(input.codeName) || 0) + input.quantity);
-        }
-      } else {
-        for (const input of inputs) {
-          secondaryMaterials.set(input.codeName, (secondaryMaterials.get(input.codeName) || 0) + input.quantity);
-        }
-      }
+    for (const entry of project) {
+      if (!terminalItems.has(entry.codeName)) continue;
+      inputRequirements.set(entry.codeName, {
+        quantity: demand.get(entry.codeName) || Number(entry.quantity),
+        depth: 1
+      });
+    }
+
+    const materialLayers = new Map();
+    for (const [codeName, requirement] of inputRequirements) {
+      if (!materialLayers.has(requirement.depth)) materialLayers.set(requirement.depth, new Map());
+      materialLayers.get(requirement.depth).set(codeName, requirement.quantity);
     }
 
     return {
@@ -206,8 +252,8 @@
       missingChoices: [...missingChoices.values()],
       cycles: [],
       materials,
-      primaryMaterials,
-      secondaryMaterials,
+      materialLayers,
+      energyConsumption,
       steps
     };
   }
