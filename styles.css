@@ -449,6 +449,20 @@ main {
   color: #ff9b91;
 }
 
+.direct-materials-section {
+  margin: 1rem 0;
+  padding: 0.9rem;
+  background: #11141a;
+  border: 1px solid #2a2e36;
+  border-radius: 4px;
+}
+
+.direct-materials-section h3 {
+  margin: 0 0 0.75rem;
+  color: #c5cedb;
+  font-size: 0.95rem;
+}
+
 .materials-total {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

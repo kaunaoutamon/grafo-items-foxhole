@@ -8,6 +8,8 @@
   const recipeChoices = document.getElementById('recipe-choices');
   const resultsSection = document.getElementById('results-section');
   const calculationStatus = document.getElementById('calculation-status');
+  const directMaterialsSection = document.getElementById('direct-materials-section');
+  const directMaterials = document.getElementById('direct-materials');
   const materialsTotal = document.getElementById('materials-total');
   const productionDetails = document.getElementById('production-details');
   const productionSteps = document.getElementById('production-steps');
@@ -137,6 +139,8 @@
     resultsSection.hidden = projectItems.length === 0;
     if (projectItems.length === 0) {
       calculationStatus.textContent = '';
+      directMaterialsSection.hidden = true;
+      directMaterials.innerHTML = '';
       materialsTotal.innerHTML = '';
       productionDetails.hidden = true;
       return;
@@ -145,38 +149,43 @@
     if (result.cycles.length > 0) {
       calculationStatus.className = 'calculation-status error';
       calculationStatus.textContent = `No se pudo completar el desglose porque hay una cadena de recetas circular: ${result.cycles.map(cycle => cycle.map(code => displayName(code, data.items)).join(' → ')).join('; ')}.`;
-      materialsTotal.innerHTML = '';
-      productionDetails.hidden = true;
-      return;
-    }
-
-    if (result.missingChoices.length > 0) {
-      calculationStatus.className = 'calculation-status';
-      calculationStatus.textContent = 'Elegí una receta para cada ítem con alternativas para calcular el total completo.';
+      directMaterialsSection.hidden = true;
+      directMaterials.innerHTML = '';
       materialsTotal.innerHTML = '';
       productionDetails.hidden = true;
       return;
     }
 
     calculationStatus.className = 'calculation-status';
-    calculationStatus.textContent = 'Los materiales compartidos se agrupan y las tandas se redondean para cubrir las cantidades solicitadas.';
+    calculationStatus.textContent = result.ready
+      ? 'Los materiales compartidos se agrupan y las tandas se redondean para cubrir las cantidades solicitadas.'
+      : 'Elegí las recetas pendientes para completar el cálculo. Mientras tanto, se muestran los insumos ya conocidos.';
 
-    const sortedMaterials = [...result.materials.entries()].sort((a, b) =>
-      displayName(a[0], data.items).localeCompare(displayName(b[0], data.items))
-    );
+    function renderMaterialRows(materialMap, emptyMessage) {
+      const sortedMaterials = [...materialMap.entries()].sort((a, b) =>
+        displayName(a[0], data.items).localeCompare(displayName(b[0], data.items))
+      );
 
-    materialsTotal.innerHTML = sortedMaterials.map(([codeName, quantity]) => {
-      const item = data.items[codeName] || {};
-      return `
-        <div class="material-total-row">
-          <div class="material-name">
-            ${item.iconFile ? `<img src="${escapeHtml(item.iconFile)}" alt="">` : ''}
-            <span>${escapeHtml(displayName(codeName, data.items))}</span>
+      return sortedMaterials.map(([codeName, quantity]) => {
+        const item = data.items[codeName] || {};
+        return `
+          <div class="material-total-row">
+            <div class="material-name">
+              ${item.iconFile ? `<img src="${escapeHtml(item.iconFile)}" alt="">` : ''}
+              <span>${escapeHtml(displayName(codeName, data.items))}</span>
+            </div>
+            <span class="material-quantity">${formatQuantity(quantity)}</span>
           </div>
-          <span class="material-quantity">${formatQuantity(quantity)}</span>
-        </div>
-      `;
-    }).join('') || '<p class="project-empty">No hay materiales base para mostrar.</p>';
+        `;
+      }).join('') || `<p class="project-empty">${escapeHtml(emptyMessage)}</p>`;
+    }
+
+    directMaterialsSection.hidden = result.directMaterials.size === 0;
+    directMaterials.innerHTML = renderMaterialRows(result.directMaterials, 'No hay insumos directos para mostrar.');
+    materialsTotal.innerHTML = renderMaterialRows(
+      result.materials,
+      result.ready ? 'No hay materiales base para mostrar.' : 'Todavía no se puede completar este nivel; elegí las recetas pendientes.'
+    );
 
     productionDetails.hidden = result.steps.length === 0;
     productionSteps.innerHTML = `

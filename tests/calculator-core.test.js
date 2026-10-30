@@ -66,6 +66,36 @@ test('requires a user choice when an item has distinct recipes', () => {
   assert.equal(chosen.materials.has('Metal'), false);
 });
 
+test('shows known first-level materials while a downstream recipe is unselected', () => {
+  const data = makeData([
+    { output: 'Vehicle', outputQty: 1, building: 'Factory', inputs: [{ codeName: 'BasicMaterials', quantity: 12 }] },
+    { output: 'BasicMaterials', outputQty: 1, building: 'Refinery A', inputs: [{ codeName: 'Metal', quantity: 2 }] },
+    { output: 'BasicMaterials', outputQty: 1, building: 'Refinery B', inputs: [{ codeName: 'Components', quantity: 3 }] }
+  ]);
+
+  const result = calculateProject([{ codeName: 'Vehicle', quantity: 1 }], data);
+
+  assert.equal(result.ready, false);
+  assert.equal(result.directMaterials.get('BasicMaterials'), 12);
+  assert.equal(result.missingChoices[0].codeName, 'BasicMaterials');
+});
+
+test('counts bunker excavations without expanding them into factory materials', () => {
+  const data = makeData([
+    { output: 'FortT1', outputQty: 1, building: 'Construction', inputs: [{ codeName: 'Excavation', quantity: 75 }] },
+    { output: 'Excavation', outputQty: 10, building: 'Factory / MPF', inputs: [{ codeName: 'Cloth', quantity: 200 }] },
+    { output: 'Cloth', outputQty: 1, building: 'Refinery', inputs: [{ codeName: 'Metal', quantity: 2 }] }
+  ]);
+
+  const result = calculateProject([{ codeName: 'FortT1', quantity: 2 }], data);
+
+  assert.equal(result.ready, true);
+  assert.equal(result.directMaterials.get('Excavation'), 150);
+  assert.equal(result.materials.get('Excavation'), 150);
+  assert.equal(result.materials.has('Cloth'), false);
+  assert.equal(result.materials.has('Metal'), false);
+});
+
 test('deduplicates identical recipes but retains different production methods', () => {
   const recipes = [
     { output: 'Item', outputQty: 1, building: 'Factory', inputs: [{ codeName: 'Metal', quantity: 2 }] },

@@ -3,6 +3,10 @@
   if (typeof module !== 'undefined' && module.exports) module.exports = calculator;
   if (root) root.FoxholeCalculator = calculator;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+  // Construction sites consume Excavation directly; the data also has an unrelated
+  // factory recipe for it, which should not replace the construction requirement.
+  const terminalItems = new Set(['Excavation']);
+
   function normalizeInputs(inputs) {
     const totals = new Map();
     for (const input of inputs || []) {
@@ -64,7 +68,7 @@
       if (visited.has(codeName)) return;
 
       visiting.push(codeName);
-      const available = recipeIndex.get(codeName) || [];
+      const available = terminalItems.has(codeName) ? [] : (recipeIndex.get(codeName) || []);
       let chosen = null;
 
       if (available.length === 1) {
@@ -100,7 +104,7 @@
         .localeCompare(data.items[b.codeName]?.displayName || b.codeName)
     );
 
-    if (project.length === 0 || missingChoices.size > 0 || cycles.length > 0) {
+    if (project.length === 0 || cycles.length > 0) {
       return {
         ready: project.length > 0 && missingChoices.size === 0 && cycles.length === 0,
         choices: choiceList,
@@ -149,6 +153,8 @@
 
     const materials = new Map();
     const steps = [];
+    const projectOutputs = new Set(project.map(entry => entry.codeName));
+    const directMaterials = new Map();
 
     for (const codeName of orderedItems) {
       const quantity = demand.get(codeName) || 0;
@@ -156,7 +162,9 @@
 
       const recipe = chosenRecipes.get(codeName);
       if (!recipe) {
-        materials.set(codeName, (materials.get(codeName) || 0) + quantity);
+        if (!missingChoices.has(codeName)) {
+          materials.set(codeName, (materials.get(codeName) || 0) + quantity);
+        }
         continue;
       }
 
@@ -179,14 +187,21 @@
         surplus: batches * recipe.outputQty - quantity,
         inputs
       });
+
+      if (projectOutputs.has(codeName)) {
+        for (const input of inputs) {
+          directMaterials.set(input.codeName, (directMaterials.get(input.codeName) || 0) + input.quantity);
+        }
+      }
     }
 
     return {
-      ready: true,
+      ready: missingChoices.size === 0,
       choices: choiceList,
-      missingChoices: [],
+      missingChoices: [...missingChoices.values()],
       cycles: [],
       materials,
+      directMaterials,
       steps
     };
   }
