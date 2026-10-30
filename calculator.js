@@ -125,7 +125,7 @@
         <span class="recipe-choice-name">${escapeHtml(displayName(choice.codeName, data.items))}</span>
         <label>
           Elegí una receta
-          <select data-recipe-output="${escapeHtml(choice.codeName)}" required>
+          <select class="select-control" data-recipe-output="${escapeHtml(choice.codeName)}" required>
             <option value="">Seleccioná una receta...</option>
             ${choice.recipes.map(recipe => `
               <option value="${escapeHtml(recipe.id)}" ${recipe.id === choice.selectedId ? 'selected' : ''}>
