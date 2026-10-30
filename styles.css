@@ -707,7 +707,7 @@ main {
   line-height: 1.5;
 }
 
-.compared-items {
+.comparison-panels {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
@@ -912,7 +912,7 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .compared-items {
+  .comparison-panels {
     grid-template-columns: repeat(2, minmax(18rem, 1fr));
     overflow-x: auto;
     padding-bottom: 0.5rem;

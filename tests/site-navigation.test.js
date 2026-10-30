@@ -35,3 +35,12 @@ test('relation filters are in the page body, not the site header', () => {
   assert.ok(headerEnd >= 0 && mainStart > headerEnd);
   assert.ok(controlsStart > mainStart);
 });
+
+test('comparison result panels stay side by side on desktop and mobile', () => {
+  const comparisonHtml = fs.readFileSync(path.join(__dirname, '..', 'comparisons.html'), 'utf8');
+  const styles = fs.readFileSync(path.join(__dirname, '..', 'styles.css'), 'utf8');
+
+  assert.match(comparisonHtml, /id="compared-items" class="comparison-panels"/);
+  assert.match(styles, /\.comparison-panels\s*\{[^}]*grid-template-columns:\s*repeat\(2,/s);
+  assert.match(styles, /\.comparison-panels\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(18rem,\s*1fr\)\)/s);
+});
