@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de proyectos · Foxhole</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app" class="calculator-app">
+    <header>
+      <h1>Calculadora de proyectos</h1>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a href="index.html">Volver a relaciones</a>
+      </nav>
+    </header>
+
+    <main class="calculator-main">
+      <div class="calculator-layout">
+        <section class="calculator-card" aria-labelledby="project-heading">
+          <h2 id="project-heading">Tu proyecto</h2>
+          <p class="calculator-intro">Agregá los ítems que querés fabricar. Los materiales se desglosan según las recetas seleccionadas.</p>
+
+          <form id="add-project-item" class="add-project-item">
+            <label class="item-field" for="item-search">
+              Ítem o vehículo
+              <input id="item-search" type="search" list="item-options" placeholder="Buscar por nombre..." autocomplete="off" required>
+              <datalist id="item-options"></datalist>
+            </label>
+            <label class="quantity-field" for="item-quantity">
+              Cantidad
+              <input id="item-quantity" type="number" min="1" step="1" value="1" required>
+            </label>
+            <button class="primary-button" type="submit">Agregar</button>
+          </form>
+
+          <div id="project-list" class="project-list" aria-live="polite"></div>
+        </section>
+
+        <section id="recipe-section" class="calculator-card" aria-labelledby="recipes-heading" hidden>
+          <h2 id="recipes-heading">Elegí las recetas</h2>
+          <p class="calculator-intro">Cuando un ítem tiene más de una receta, elegí cuál querés usar. La selección se aplica a todas sus apariciones en el proyecto.</p>
+          <div id="recipe-choices" class="recipe-choices"></div>
+        </section>
+
+        <section id="results-section" class="calculator-card results-card" aria-labelledby="results-heading" hidden>
+          <h2 id="results-heading">Materiales base necesarios</h2>
+          <div id="calculation-status" class="calculation-status" role="status"></div>
+          <div id="materials-total" class="materials-total"></div>
+          <details id="production-details" class="production-details" hidden>
+            <summary>Ver desglose de producción</summary>
+            <div id="production-steps"></div>
+          </details>
+        </section>
+
+        <div id="calculator-loading" class="loading">Cargando datos de Foxhole...</div>
+      </div>
+    </main>
+  </div>
+  <script src="calculator-core.js"></script>
+  <script src="calculator.js"></script>
+</body>
+</html>

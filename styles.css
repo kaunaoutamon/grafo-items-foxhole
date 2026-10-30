@@ -246,3 +246,304 @@ main {
   color: #9fb0c7;
   background: #0f1115;
 }
+
+.site-nav {
+  display: flex;
+  align-items: center;
+}
+
+.site-nav a {
+  color: #f0b040;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.site-nav a:hover {
+  text-decoration: underline;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.calculator-main {
+  display: block;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+.calculator-layout {
+  display: grid;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.calculator-card {
+  background: #181b21;
+  border: 1px solid #2a2e36;
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.calculator-card h2 {
+  margin: 0 0 0.5rem;
+  color: #f0b040;
+  font-size: 1.15rem;
+}
+
+.calculator-intro {
+  margin: 0 0 1rem;
+  color: #9fb0c7;
+  line-height: 1.5;
+}
+
+.add-project-item {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 130px auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.add-project-item label,
+.recipe-choice label {
+  display: grid;
+  gap: 0.4rem;
+  color: #c5cedb;
+  font-size: 0.9rem;
+}
+
+.add-project-item input,
+.recipe-choice select {
+  min-width: 0;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: #0f1115;
+  color: #e0e0e0;
+  font: inherit;
+}
+
+.add-project-item input:focus,
+.recipe-choice select:focus {
+  outline: 2px solid rgba(240, 176, 64, 0.65);
+  outline-offset: 1px;
+}
+
+.primary-button,
+.remove-project-item {
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: #252a33;
+  color: #e0e0e0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.primary-button {
+  border-color: #d99624;
+  background: #f0b040;
+  color: #17191d;
+  font-weight: 700;
+}
+
+.primary-button:hover {
+  background: #ffc45c;
+}
+
+.remove-project-item:hover {
+  background: #38313a;
+}
+
+.project-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.project-empty {
+  margin: 0;
+  padding: 0.9rem;
+  border: 1px dashed #3a3f4a;
+  border-radius: 4px;
+  color: #9fb0c7;
+}
+
+.project-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 110px auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem;
+  background: #0f1115;
+  border: 1px solid #2a2e36;
+  border-radius: 4px;
+}
+
+.project-item-name,
+.material-name {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.project-item-name img,
+.material-name img {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  object-fit: contain;
+}
+
+.project-item-name span,
+.material-name span {
+  overflow-wrap: anywhere;
+}
+
+.project-quantity {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #3a3f4a;
+  border-radius: 4px;
+  background: #181b21;
+  color: #e0e0e0;
+  font: inherit;
+}
+
+.recipe-choices {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.recipe-choice {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.7fr) minmax(0, 1.3fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #0f1115;
+  border: 1px solid #2a2e36;
+  border-radius: 4px;
+}
+
+.recipe-choice-name {
+  font-weight: 600;
+}
+
+.calculation-status {
+  margin: 0.75rem 0;
+  color: #9fb0c7;
+}
+
+.calculation-status.error {
+  color: #ff9b91;
+}
+
+.materials-total {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.5rem;
+}
+
+.material-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem;
+  background: #0f1115;
+  border: 1px solid #2a2e36;
+  border-radius: 4px;
+}
+
+.material-quantity {
+  color: #f0b040;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.production-details {
+  margin-top: 1.25rem;
+  border-top: 1px solid #2a2e36;
+  padding-top: 0.9rem;
+}
+
+.production-details summary {
+  color: #f0b040;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.production-steps {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.production-step {
+  padding: 0.75rem;
+  background: #0f1115;
+  border: 1px solid #2a2e36;
+  border-radius: 4px;
+  line-height: 1.5;
+}
+
+.production-step strong {
+  color: #e0e0e0;
+}
+
+.production-step p {
+  margin: 0.25rem 0 0;
+  color: #9fb0c7;
+}
+
+@media (max-width: 680px) {
+  .calculator-main {
+    padding: 0.75rem;
+  }
+
+  .calculator-card {
+    padding: 1rem;
+  }
+
+  .add-project-item {
+    grid-template-columns: 1fr 100px;
+  }
+
+  .add-project-item .item-field {
+    grid-column: 1 / -1;
+  }
+
+  .add-project-item .primary-button {
+    min-height: 42px;
+  }
+
+  .project-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .project-row .project-quantity {
+    grid-column: 1;
+  }
+
+  .project-row .remove-project-item {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  .recipe-choice {
+    grid-template-columns: 1fr;
+  }
+}
