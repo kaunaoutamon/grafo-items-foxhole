@@ -20,6 +20,62 @@
     'VehicleSubsystemDisableChances'
   ]);
 
+  const techIdLabels = {
+    ATGrenade: 'Granada antitanque',
+    ATRifle: 'Fusil antitanque',
+    ATRifleAssault: 'Fusil de asalto antitanque',
+    ATRifleAutomatic: 'Fusil automático antitanque',
+    Mortar: 'Mortero',
+    RifleAutomatic: 'Fusil automático',
+    RPG: 'Lanzacohetes RPG'
+  };
+
+  const techWordLabels = {
+    Aircraft: 'aeronave',
+    Ammo: 'munición',
+    Assault: 'de asalto',
+    Automatic: 'automático',
+    Bomber: 'bombardero',
+    Destroyer: 'destructor',
+    Fighter: 'caza',
+    Grenade: 'granada',
+    Heavy: 'pesado',
+    Light: 'ligero',
+    MachineGun: 'ametralladora',
+    Mine: 'mina',
+    Mortar: 'mortero',
+    Pistol: 'pistola',
+    Rifle: 'fusil',
+    RPG: 'RPG',
+    Revolver: 'revólver',
+    Scout: 'explorador',
+    Ship: 'buque',
+    Shotgun: 'escopeta',
+    Smoke: 'humo',
+    Sniper: 'francotirador',
+    Tank: 'tanque',
+    Torpedo: 'torpedo',
+    Truck: 'camión',
+    Uniform: 'uniforme'
+  };
+
+  function formatTechId(value) {
+    const techCode = String(value ?? '').replace(/^ETechID::/, '').replace(/^Unlock/, '');
+    if (!techCode || techCode === 'None') return 'No requiere tecnología';
+    if (techIdLabels[techCode]) return `Desbloquea ${techIdLabels[techCode]}`;
+
+    const antiTank = techCode.startsWith('AT') && techCode.length > 2;
+    const code = antiTank ? techCode.slice(2) : techCode;
+    const words = code
+      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1 $2')
+      .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      .split(/\s+/)
+      .map(word => techWordLabels[word] || word);
+    if (antiTank) words.push('antitanque');
+    const description = words.join(' ');
+    return `Desbloquea ${description.charAt(0).toLocaleUpperCase('es-ES')}${description.slice(1)}`;
+  }
+
   function isMaterialCost(propertyKey) {
     return propertyKey.includes('.CostPerCrate.') ||
       propertyKey.includes('.ResourceAmounts.') ||
@@ -58,5 +114,16 @@
     };
   }
 
-  return { compareProperty, getPropertyDirection, isMaterialCost };
+  function filterComparisonItems(comparisonItems, items, category, faction, type = '') {
+    if (!category || !faction) return [];
+    return Object.entries(comparisonItems)
+      .filter(([codeName, comparison]) =>
+        comparison.category === category &&
+        (!type || comparison.type === type) &&
+        (items[codeName]?.faction || 'Neutral') === faction
+      )
+      .map(([codeName]) => codeName);
+  }
+
+  return { compareProperty, filterComparisonItems, formatTechId, getPropertyDirection, isMaterialCost };
 });

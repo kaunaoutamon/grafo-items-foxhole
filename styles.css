@@ -908,8 +908,13 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .comparison-selection,
-  .compared-items {
+  .comparison-selection {
     grid-template-columns: 1fr;
+  }
+
+  .compared-items {
+    grid-template-columns: repeat(2, minmax(18rem, 1fr));
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
   }
 }

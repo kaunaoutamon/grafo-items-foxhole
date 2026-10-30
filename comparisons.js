@@ -32,34 +32,6 @@
     Structures: 'Estructuras'
   };
 
-  const comparisonTypeLabels = {
-    'Assault Rifle': 'Fusil de asalto',
-    'Heavy Rifle': 'Fusil pesado',
-    'Long Rifle': 'Fusil de largo alcance',
-    'Machine Gun': 'Ametralladora',
-    'Mortar': 'Mortero',
-    'Mortar Ammo': 'Munición de mortero',
-    'Pistol': 'Pistola',
-    'Rifle': 'Fusil',
-    'Shotgun': 'Escopeta',
-    'Sniper Rifle': 'Fusil de francotirador',
-    'Submachine Gun': 'Subfusil',
-    Bicycle: 'Bicicleta',
-    CombatShip: 'Buque de combate',
-    HandheldWeapon: 'Arma portátil',
-    LandingCraft: 'Lancha de desembarco',
-    LargeCombatShip: 'Buque de combate grande',
-    OpenRoofWheeledTransport: 'Transporte con ruedas descubierto',
-    Rail: 'Vehículo ferroviario',
-    RailCar: 'Vagón',
-    Ship: 'Buque',
-    Tank: 'Tanque',
-    TrackedTransport: 'Transporte con orugas',
-    Trailer: 'Remolque',
-    WheeledArmoured: 'Vehículo blindado con ruedas',
-    WheeledTransport: 'Transporte con ruedas'
-  };
-
   const propertyLabels = {
     Agility: 'Agilidad',
     AccuracyRadius: 'Radio de dispersión',
@@ -128,11 +100,7 @@
   };
 
   function categoryLabel(category) {
-    const [group, type] = category.split(':', 2);
-    const groupLabel = categoryLabels[group] || group;
-    if (!type) return groupLabel;
-    const typeLabel = comparisonTypeLabels[type] || type.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
-    return `${groupLabel} · ${typeLabel}`;
+    return categoryLabels[category] || category;
   }
 
   function propertyLabel(propertyKey, items) {
@@ -148,21 +116,22 @@
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2');
   }
 
-  function formatPropertyValue(value) {
+  function formatPropertyValue(value, propertyKey) {
     if (value === undefined || value === null || value === '') return '—';
     if (typeof value === 'number') return numberFormat.format(value);
     if (typeof value === 'boolean') return value ? 'Sí' : 'No';
+    if (propertyKey.endsWith('.TechID')) return FoxholeComparison.formatTechId(value);
     return String(value).replace(/^E[^:]+::/, '').replaceAll('_', ' ');
   }
 
-  function renderValue(value, side, outcome) {
+  function renderValue(value, side, outcome, propertyKey) {
     const state = outcome.winner === side ? ' is-winner' : outcome.state === 'tie' ? ' is-tie' : '';
     const badge = outcome.winner === side
       ? '<span class="comparison-badge">Gana</span>'
       : outcome.state === 'tie'
         ? '<span class="comparison-badge comparison-badge-tie">Empate</span>'
         : '';
-    return `<div class="comparison-value${state}"><span>${escapeHtml(formatPropertyValue(value))}</span>${badge}</div>`;
+    return `<div class="comparison-value${state}"><span>${escapeHtml(formatPropertyValue(value, propertyKey))}</span>${badge}</div>`;
   }
 
   function renderComparisonPanel(item, side, panelLabel, rows) {
@@ -184,7 +153,7 @@
                 <span>${escapeHtml(row.label)}</span>
                 <small>${escapeHtml(row.outcome.message)}</small>
               </div>
-              ${renderValue(row[side], side, row.outcome)}
+              ${renderValue(row[side], side, row.outcome, row.key)}
             </div>
           `).join('')}
         </div>
@@ -205,8 +174,7 @@
     const rows = [
       { key: 'category', label: 'Categoría', left: categoryLabel(comparisonData.items[leftCode].category), right: categoryLabel(comparisonData.items[rightCode].category) },
       { key: 'faction', label: 'Facción', left: leftItem.faction || 'Neutral', right: rightItem.faction || 'Neutral' },
-      { key: 'tier', label: 'Nivel tecnológico', left: leftItem.tier, right: rightItem.tier },
-      { key: 'description', label: 'Descripción', left: leftItem.description, right: rightItem.description }
+      { key: 'tier', label: 'Nivel tecnológico', left: leftItem.tier, right: rightItem.tier }
     ];
 
     const allPropertyKeys = [...new Set([
@@ -305,14 +273,23 @@
   );
   status.textContent = 'Primero elegí la categoría que querés comparar.';
 
-  function updatePanelItems(panel, category) {
+  function updatePanelItems(panel, category, requiredType = '', preserveSelection = false) {
     const faction = panel.faction.value;
-    const candidates = Object.entries(comparisonData.items)
-      .filter(([codeName, comparison]) =>
-        comparison.category === category &&
-        (data.items[codeName]?.faction || 'Neutral') === faction
-      )
-      .map(([codeName]) => data.items[codeName])
+    if (!category || !faction) {
+      replaceOptions(panel.item, [], 'Seleccioná un ítem...', true);
+      resultsSection.hidden = true;
+      return;
+    }
+
+    const previousCode = preserveSelection ? panel.item.value : '';
+    const candidates = FoxholeComparison.filterComparisonItems(
+      comparisonData.items,
+      data.items,
+      category,
+      faction,
+      requiredType
+    )
+      .map(codeName => data.items[codeName])
       .filter(Boolean)
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
     const duplicateNames = new Map();
@@ -323,6 +300,10 @@
         ? `${item.displayName} — ${item.codeName}`
         : item.displayName
     })), 'Seleccioná un ítem...', candidates.length === 0);
+    if (previousCode && candidates.some(item => item.codeName === previousCode)) {
+      panel.item.value = previousCode;
+      ThemedDropdown.refresh(panel.item);
+    }
     resultsSection.hidden = true;
   }
 
@@ -331,7 +312,9 @@
     const rightCode = panels.right.item.value;
     if (!leftCode || !rightCode) {
       resultsSection.hidden = true;
-      status.textContent = 'Elegí una facción y un ítem en cada panel para ver la comparación.';
+      status.textContent = leftCode || rightCode
+        ? 'El otro panel solo ofrece ítems del mismo tipo.'
+        : 'Elegí una facción y un ítem en cada panel para ver la comparación.';
       return;
     }
     status.textContent = `Comparando ${displayItemName(leftCode, data.items)} con ${displayItemName(rightCode, data.items)}.`;
@@ -358,9 +341,16 @@
 
   for (const panel of Object.values(panels)) {
     panel.faction.addEventListener('change', () => {
-      updatePanelItems(panel, categorySelect.value);
+      const otherPanel = panel === panels.left ? panels.right : panels.left;
+      const otherItem = comparisonData.items[otherPanel.item.value];
+      updatePanelItems(panel, categorySelect.value, otherItem?.type || '');
       renderSelectedComparison();
     });
-    panel.item.addEventListener('change', renderSelectedComparison);
+    panel.item.addEventListener('change', () => {
+      const otherPanel = panel === panels.left ? panels.right : panels.left;
+      const selectedItem = comparisonData.items[panel.item.value];
+      updatePanelItems(otherPanel, categorySelect.value, selectedItem?.type || '', true);
+      renderSelectedComparison();
+    });
   }
 })();
