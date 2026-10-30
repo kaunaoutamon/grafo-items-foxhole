@@ -75,12 +75,69 @@
   const recipeIndex = FoxholeCalculator.createRecipeIndex(data.recipes);
   const itemLabels = makeItemLabels(data.items, recipeIndex);
   const itemByLabel = new Map([...itemLabels.entries()].map(([label, item]) => [label, item]));
+  const searchableItems = [...itemLabels.entries()].map(([label, item]) => ({ label, item }));
+  let visibleSuggestions = [];
+  let activeSuggestionIndex = -1;
 
-  for (const label of itemLabels.keys()) {
-    const option = document.createElement('option');
-    option.value = label;
-    itemOptions.appendChild(option);
+  function closeItemOptions() {
+    itemOptions.hidden = true;
+    itemSearch.setAttribute('aria-expanded', 'false');
+    itemSearch.removeAttribute('aria-activedescendant');
+    visibleSuggestions = [];
+    activeSuggestionIndex = -1;
   }
+
+  function renderItemOptions(query) {
+    const normalizedQuery = query.trim().toLocaleLowerCase();
+    visibleSuggestions = searchableItems.filter(({ label, item }) =>
+      !normalizedQuery || label.toLocaleLowerCase().includes(normalizedQuery) ||
+      item.codeName.toLocaleLowerCase().includes(normalizedQuery)
+    );
+    activeSuggestionIndex = -1;
+    itemSearch.removeAttribute('aria-activedescendant');
+    itemSearch.setAttribute('aria-expanded', 'true');
+    itemOptions.hidden = false;
+
+    if (visibleSuggestions.length === 0) {
+      itemOptions.innerHTML = '<div class="item-suggestions-empty">No se encontraron ítems.</div>';
+      return;
+    }
+
+    itemOptions.innerHTML = visibleSuggestions.map(({ label }, index) => `
+      <div id="item-option-${index}" class="item-suggestion" role="option" aria-selected="false" data-item-label="${escapeHtml(label)}">
+        <span>${escapeHtml(label)}</span>
+      </div>
+    `).join('');
+  }
+
+  function setActiveSuggestion(index) {
+    if (visibleSuggestions.length === 0) return;
+    activeSuggestionIndex = Math.max(0, Math.min(index, visibleSuggestions.length - 1));
+    const options = itemOptions.querySelectorAll('[role="option"]');
+    options.forEach((option, optionIndex) => {
+      const active = optionIndex === activeSuggestionIndex;
+      option.setAttribute('aria-selected', String(active));
+      if (active) {
+        itemSearch.setAttribute('aria-activedescendant', option.id);
+        option.scrollIntoView({ block: 'nearest' });
+      }
+    });
+  }
+
+  function chooseItemSuggestion(label) {
+    itemSearch.value = label;
+    itemSearch.setCustomValidity('');
+    closeItemOptions();
+  }
+
+  itemOptions.addEventListener('mousedown', event => {
+    if (event.target.closest('[data-item-label]')) event.preventDefault();
+  });
+
+  itemOptions.addEventListener('click', event => {
+    const option = event.target.closest('[data-item-label]');
+    if (option) chooseItemSuggestion(option.dataset.itemLabel);
+  });
 
   function renderProject() {
     if (projectItems.length === 0) {
@@ -248,13 +305,39 @@
     itemSearch.setCustomValidity('');
     projectItems.push({ id: Date.now() + Math.random(), codeName: item.codeName, quantity });
     itemSearch.value = '';
+    closeItemOptions();
     quantityInput.value = '1';
     renderProject();
     recalculate();
-    itemSearch.focus();
   });
 
-  itemSearch.addEventListener('input', () => itemSearch.setCustomValidity(''));
+  itemSearch.addEventListener('focus', () => renderItemOptions(itemSearch.value));
+  itemSearch.addEventListener('input', () => {
+    itemSearch.setCustomValidity('');
+    renderItemOptions(itemSearch.value);
+  });
+  itemSearch.addEventListener('blur', closeItemOptions);
+  itemSearch.addEventListener('keydown', event => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (itemOptions.hidden) renderItemOptions(itemSearch.value);
+      setActiveSuggestion(activeSuggestionIndex + 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (itemOptions.hidden) {
+        renderItemOptions(itemSearch.value);
+        setActiveSuggestion(visibleSuggestions.length - 1);
+      } else {
+        setActiveSuggestion(activeSuggestionIndex < 0 ? visibleSuggestions.length - 1 : activeSuggestionIndex - 1);
+      }
+    } else if (event.key === 'Enter' && !itemOptions.hidden && activeSuggestionIndex >= 0) {
+      event.preventDefault();
+      chooseItemSuggestion(visibleSuggestions[activeSuggestionIndex].label);
+    } else if (event.key === 'Escape' && !itemOptions.hidden) {
+      event.preventDefault();
+      closeItemOptions();
+    }
+  });
 
   projectList.addEventListener('change', event => {
     if (event.target.dataset.action !== 'quantity') return;
