@@ -89,6 +89,73 @@
   flex: 0 0 auto;
 }
 
+.relations-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.relations-controls-panel {
+  flex: 0 0 auto;
+  margin: 1rem 1rem 0.75rem;
+  padding: 1.25rem;
+  border: 1px solid #2a2e36;
+  border-radius: 8px;
+  background: #181b21;
+}
+
+.relations-control-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.5fr) minmax(180px, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.relations-control-grid.has-faction {
+  grid-template-columns: minmax(220px, 1.5fr) repeat(2, minmax(180px, 1fr)) auto;
+}
+
+.relations-control-field {
+  display: grid;
+  min-width: 0;
+  gap: 0.4rem;
+  color: #c5cedb;
+  font-size: 0.9rem;
+}
+
+.relations-control-label {
+  color: #c5cedb;
+}
+
+.relations-control-field .themed-dropdown {
+  width: 100%;
+}
+
+.relations-content {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.primary-button {
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
+  border: 1px solid #d99624;
+  border-radius: 4px;
+  background: #f0b040;
+  color: #17191d;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primary-button:hover {
+  background: #ffc45c;
+}
+
 .themed-dropdown-trigger {
   width: 100%;
   overflow: hidden;
@@ -165,4 +232,34 @@
   border: 2px solid #181b21;
   border-radius: 8px;
   background: #4a505d;
+}
+
+@media (max-width: 840px) {
+  .relations-control-grid.has-faction {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .relations-control-grid .search-field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .relations-controls-panel {
+    margin: 0.75rem 0.75rem 0.5rem;
+    padding: 0.9rem;
+  }
+
+  .relations-control-grid,
+  .relations-control-grid.has-faction {
+    grid-template-columns: 1fr;
+  }
+
+  .relations-control-grid .search-field {
+    grid-column: auto;
+  }
+
+  .relations-control-grid .primary-button {
+    width: 100%;
+  }
 }
