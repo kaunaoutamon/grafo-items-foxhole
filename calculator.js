@@ -99,12 +99,12 @@
     itemOptions.hidden = false;
 
     if (visibleSuggestions.length === 0) {
-      itemOptions.innerHTML = '<div class="item-suggestions-empty">No se encontraron ítems.</div>';
+      itemOptions.innerHTML = '<div class="themed-dropdown-empty">No se encontraron ítems.</div>';
       return;
     }
 
     itemOptions.innerHTML = visibleSuggestions.map(({ label }, index) => `
-      <div id="item-option-${index}" class="item-suggestion" role="option" aria-selected="false" data-item-label="${escapeHtml(label)}">
+      <div id="item-option-${index}" class="themed-dropdown-option" role="option" aria-selected="false" data-item-label="${escapeHtml(label)}">
         <span>${escapeHtml(label)}</span>
       </div>
     `).join('');
@@ -187,9 +187,9 @@
     recipeChoices.innerHTML = choices.map(choice => `
       <div class="recipe-choice">
         <span class="recipe-choice-name">${escapeHtml(displayName(choice.codeName, data.items))}</span>
-        <label>
-          Elegí una receta
-          <select class="form-control select-control" data-recipe-output="${escapeHtml(choice.codeName)}" required>
+        <div class="recipe-choice-field">
+          <span>Elegí una receta</span>
+          <select class="form-control select-control" data-recipe-output="${escapeHtml(choice.codeName)}" aria-label="Receta para ${escapeHtml(displayName(choice.codeName, data.items))}" required>
             <option value="">Seleccioná una receta...</option>
             ${choice.recipes.map(recipe => `
               <option value="${escapeHtml(recipe.id)}" ${recipe.id === choice.selectedId ? 'selected' : ''}>
@@ -197,9 +197,12 @@
               </option>
             `).join('')}
           </select>
-        </label>
+        </div>
       </div>
     `).join('');
+    recipeChoices.querySelectorAll('select[data-recipe-output]').forEach(select => {
+      ThemedDropdown.enhance(select);
+    });
   }
 
   function renderResults(result) {
@@ -376,8 +379,8 @@
     if (event.target.value) selectedRecipes[codeName] = event.target.value;
     else delete selectedRecipes[codeName];
     recalculate();
-    const focusedChoice = [...recipeChoices.querySelectorAll('[data-recipe-output]')]
-      .find(select => select.dataset.recipeOutput === codeName);
+    const focusedChoice = [...recipeChoices.querySelectorAll('.themed-dropdown-trigger[data-recipe-output]')]
+      .find(trigger => trigger.dataset.recipeOutput === codeName);
     focusedChoice?.focus();
   });
 

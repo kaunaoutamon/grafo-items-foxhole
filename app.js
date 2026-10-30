@@ -77,6 +77,9 @@
     categorySelect.appendChild(option);
   }
 
+  ThemedDropdown.enhance(categorySelect);
+  ThemedDropdown.enhance(factionSelect);
+
   function sortItems(itemList) {
     return itemList.sort((a, b) => {
       if (a.tier !== b.tier) return a.tier - b.tier;
@@ -322,6 +325,8 @@
     searchInput.value = '';
     categorySelect.value = '';
     factionSelect.value = '';
+    ThemedDropdown.refresh(categorySelect);
+    ThemedDropdown.refresh(factionSelect);
     renderMatrix();
   }
 

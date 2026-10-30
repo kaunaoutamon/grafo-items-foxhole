@@ -82,8 +82,8 @@ header h1 {
   opacity: 1;
 }
 
-.form-control:focus-visible,
-.select-control:focus-visible {
+.form-control:focus,
+.select-control:focus {
   border-color: #f0b040;
   outline: 2px solid rgba(240, 176, 64, 0.55);
   outline-offset: 2px;
@@ -312,6 +312,8 @@ main {
   position: absolute;
   width: 1px;
   height: 1px;
+  min-width: 0;
+  min-height: 0;
   padding: 0;
   margin: -1px;
   overflow: hidden;
@@ -360,7 +362,7 @@ main {
 }
 
 .add-project-item label,
-.recipe-choice label {
+.recipe-choice-field {
   display: grid;
   gap: 0.4rem;
   color: #c5cedb;
@@ -381,9 +383,30 @@ main {
   background-size: 1rem;
 }
 
-.item-suggestions {
+.themed-dropdown {
+  position: relative;
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+
+.controls .themed-dropdown {
+  width: auto;
+  min-width: 160px;
+  flex: 0 0 auto;
+}
+
+.themed-dropdown-trigger {
+  width: 100%;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.themed-dropdown-menu {
   position: absolute;
-  z-index: 30;
+  z-index: 40;
   top: calc(100% + 0.35rem);
   right: 0;
   left: 0;
@@ -398,11 +421,11 @@ main {
   color-scheme: dark;
 }
 
-.item-suggestions[hidden] {
+.themed-dropdown-menu[hidden] {
   display: none;
 }
 
-.item-suggestion {
+.themed-dropdown-option {
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -419,28 +442,33 @@ main {
   cursor: pointer;
 }
 
-.item-suggestion:hover,
-.item-suggestion[aria-selected="true"] {
+.themed-dropdown-option:hover,
+.themed-dropdown-option[aria-selected="true"] {
   background: #252a33;
   box-shadow: inset 3px 0 #f0b040;
   color: #f0b040;
 }
 
-.item-suggestions-empty {
+.themed-dropdown-option[aria-disabled="true"] {
+  color: #697384;
+  cursor: not-allowed;
+}
+
+.themed-dropdown-empty {
   padding: 0.7rem 0.75rem;
   color: #9fb0c7;
   font-size: 0.9rem;
 }
 
-.item-suggestions::-webkit-scrollbar {
+.themed-dropdown-menu::-webkit-scrollbar {
   width: 8px;
 }
 
-.item-suggestions::-webkit-scrollbar-track {
+.themed-dropdown-menu::-webkit-scrollbar-track {
   background: #0f1115;
 }
 
-.item-suggestions::-webkit-scrollbar-thumb {
+.themed-dropdown-menu::-webkit-scrollbar-thumb {
   border: 2px solid #181b21;
   border-radius: 8px;
   background: #4a505d;
