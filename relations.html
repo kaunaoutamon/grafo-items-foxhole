@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Facility Assistant | Relaciones</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="themed-dropdown.css">
+</head>
+<body>
+  <div id="app">
+    <header class="site-header">
+      <a class="site-brand" href="index.html">Facility Assistant</a>
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a href="index.html">Inicio</a>
+        <a href="relations.html" aria-current="page">Relaciones</a>
+        <a href="calculator.html">Calculadora</a>
+        <a href="comparisons.html">Comparativas</a>
+      </nav>
+    </header>
+    <main class="relations-main">
+      <section class="relations-controls-panel" aria-label="Filtros de relaciones">
+        <h1 class="page-title">Relaciones de ítems</h1>
+        <div class="relations-control-grid has-faction">
+          <label class="relations-control-field search-field" for="search">
+            Buscar ítem
+            <input type="text" id="search" class="form-control" placeholder="Buscar ítem..." autocomplete="off">
+          </label>
+          <div class="relations-control-field">
+            <span class="relations-control-label">Categoría</span>
+            <select id="category-filter" class="form-control select-control" aria-label="Filtrar por categoría">
+              <option value="">Todas las categorías</option>
+            </select>
+          </div>
+          <div class="relations-control-field">
+            <span class="relations-control-label">Facción</span>
+            <select id="faction-filter" class="form-control select-control" aria-label="Filtrar por facción">
+              <option value="">Todas las facciones</option>
+              <option value="Colonials">Colonials</option>
+              <option value="Wardens">Wardens</option>
+            </select>
+          </div>
+          <button id="clear-selection" class="primary-button">Limpiar</button>
+        </div>
+      </section>
+      <div class="relations-content">
+        <aside id="sidebar">
+          <div id="item-info">
+            <p>Haz clic en una fila o celda para ver los detalles.</p>
+          </div>
+        </aside>
+        <div id="matrix-container">
+          <div id="matrix"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="themed-dropdown.js"></script>
+  <script src="ui-utils.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -3,56 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Relaciones de ítems de Foxhole</title>
+  <title>Facility Assistant</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="themed-dropdown.css">
 </head>
 <body>
-  <div id="app">
-    <header>
-      <h1>Relaciones de ítems de Foxhole</h1>
+  <div id="app" class="home-app">
+    <header class="site-header">
+      <a class="site-brand" href="index.html">Facility Assistant</a>
       <nav class="site-nav" aria-label="Navegación principal">
-        <a href="calculator.html">Calculadora de proyectos</a>
+        <a href="index.html" aria-current="page">Inicio</a>
+        <a href="relations.html">Relaciones</a>
+        <a href="calculator.html">Calculadora</a>
+        <a href="comparisons.html">Comparativas</a>
       </nav>
     </header>
-    <main class="relations-main">
-      <section class="relations-controls-panel" aria-label="Filtros de relaciones">
-        <div class="relations-control-grid has-faction">
-          <label class="relations-control-field search-field" for="search">
-            Buscar ítem
-            <input type="text" id="search" class="form-control" placeholder="Buscar ítem..." autocomplete="off">
-          </label>
-          <div class="relations-control-field">
-            <span class="relations-control-label">Categoría</span>
-            <select id="category-filter" class="form-control select-control" aria-label="Filtrar por categoría">
-              <option value="">Todas las categorías</option>
-            </select>
-          </div>
-          <div class="relations-control-field">
-            <span class="relations-control-label">Facción</span>
-            <select id="faction-filter" class="form-control select-control" aria-label="Filtrar por facción">
-              <option value="">Todas las facciones</option>
-              <option value="Colonials">Colonials</option>
-              <option value="Wardens">Wardens</option>
-            </select>
-          </div>
-          <button id="clear-selection" class="primary-button">Limpiar</button>
-        </div>
-      </section>
-      <div class="relations-content">
-        <aside id="sidebar">
-          <div id="item-info">
-            <p>Haz clic en una fila o celda para ver los detalles.</p>
-          </div>
-        </aside>
-        <div id="matrix-container">
-          <div id="matrix"></div>
-        </div>
+
+    <main class="home-main">
+      <div class="home-content">
+        <section class="home-hero">
+          <p class="home-eyebrow">Foxhole · herramientas de fabricación</p>
+          <h1>Facility Assistant</h1>
+          <p>Consultá las relaciones entre ítems, calculá materiales para tus proyectos y prepará comparativas.</p>
+        </section>
+
+        <section class="home-destinations" aria-label="Herramientas">
+          <a class="home-destination" href="relations.html">
+            <span class="destination-number">01</span>
+            <h2>Relaciones</h2>
+            <p>Explorá qué materiales necesita cada ítem y dónde se utiliza.</p>
+            <span class="destination-action">Abrir relaciones <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="home-destination" href="calculator.html">
+            <span class="destination-number">02</span>
+            <h2>Calculadora</h2>
+            <p>Calculá los materiales y el consumo energético de un proyecto.</p>
+            <span class="destination-action">Abrir calculadora <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="home-destination" href="comparisons.html">
+            <span class="destination-number">03</span>
+            <h2>Comparativas</h2>
+            <p>Accedé a la nueva sección de comparativas.</p>
+            <span class="destination-action">Abrir comparativas <span aria-hidden="true">→</span></span>
+          </a>
+        </section>
       </div>
     </main>
   </div>
-  <script src="themed-dropdown.js"></script>
-  <script src="ui-utils.js"></script>
-  <script src="app.js"></script>
 </body>
 </html>
