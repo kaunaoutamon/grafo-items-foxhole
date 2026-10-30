@@ -8,9 +8,12 @@
   const recipeChoices = document.getElementById('recipe-choices');
   const resultsSection = document.getElementById('results-section');
   const calculationStatus = document.getElementById('calculation-status');
-  const directMaterialsSection = document.getElementById('direct-materials-section');
-  const directMaterials = document.getElementById('direct-materials');
-  const materialsTotal = document.getElementById('materials-total');
+  const primaryMaterialsSection = document.getElementById('primary-materials-section');
+  const primaryMaterials = document.getElementById('primary-materials');
+  const secondaryMaterialsSection = document.getElementById('secondary-materials-section');
+  const secondaryMaterials = document.getElementById('secondary-materials');
+  const baseMaterialsSection = document.getElementById('base-materials-section');
+  const baseMaterials = document.getElementById('base-materials');
   const productionDetails = document.getElementById('production-details');
   const productionSteps = document.getElementById('production-steps');
   const loading = document.getElementById('calculator-loading');
@@ -139,9 +142,12 @@
     resultsSection.hidden = projectItems.length === 0;
     if (projectItems.length === 0) {
       calculationStatus.textContent = '';
-      directMaterialsSection.hidden = true;
-      directMaterials.innerHTML = '';
-      materialsTotal.innerHTML = '';
+      primaryMaterialsSection.hidden = true;
+      primaryMaterials.innerHTML = '';
+      secondaryMaterialsSection.hidden = true;
+      secondaryMaterials.innerHTML = '';
+      baseMaterialsSection.hidden = true;
+      baseMaterials.innerHTML = '';
       productionDetails.hidden = true;
       return;
     }
@@ -149,9 +155,12 @@
     if (result.cycles.length > 0) {
       calculationStatus.className = 'calculation-status error';
       calculationStatus.textContent = `No se pudo completar el desglose porque hay una cadena de recetas circular: ${result.cycles.map(cycle => cycle.map(code => displayName(code, data.items)).join(' → ')).join('; ')}.`;
-      directMaterialsSection.hidden = true;
-      directMaterials.innerHTML = '';
-      materialsTotal.innerHTML = '';
+      primaryMaterialsSection.hidden = true;
+      primaryMaterials.innerHTML = '';
+      secondaryMaterialsSection.hidden = true;
+      secondaryMaterials.innerHTML = '';
+      baseMaterialsSection.hidden = true;
+      baseMaterials.innerHTML = '';
       productionDetails.hidden = true;
       return;
     }
@@ -180,9 +189,27 @@
       }).join('') || `<p class="project-empty">${escapeHtml(emptyMessage)}</p>`;
     }
 
-    directMaterialsSection.hidden = result.directMaterials.size === 0;
-    directMaterials.innerHTML = renderMaterialRows(result.directMaterials, 'No hay insumos directos para mostrar.');
-    materialsTotal.innerHTML = renderMaterialRows(
+    primaryMaterialsSection.hidden = result.primaryMaterials.size === 0;
+    primaryMaterials.innerHTML = renderMaterialRows(
+      result.primaryMaterials,
+      'No hay materiales primarios para mostrar.'
+    );
+    secondaryMaterialsSection.hidden = result.secondaryMaterials.size === 0;
+    secondaryMaterials.innerHTML = renderMaterialRows(
+      result.secondaryMaterials,
+      'No hay materiales secundarios para mostrar.'
+    );
+
+    function mapsEqual(first, second) {
+      return first.size === second.size && [...first].every(([codeName, quantity]) =>
+        second.get(codeName) === quantity
+      );
+    }
+
+    baseMaterialsSection.hidden = result.materials.size === 0 ||
+      mapsEqual(result.materials, result.primaryMaterials) ||
+      mapsEqual(result.materials, result.secondaryMaterials);
+    baseMaterials.innerHTML = renderMaterialRows(
       result.materials,
       result.ready ? 'No hay materiales base para mostrar.' : 'Todavía no se puede completar este nivel; elegí las recetas pendientes.'
     );

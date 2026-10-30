@@ -154,7 +154,8 @@
     const materials = new Map();
     const steps = [];
     const projectOutputs = new Set(project.map(entry => entry.codeName));
-    const directMaterials = new Map();
+    const primaryMaterials = new Map();
+    const secondaryMaterials = new Map();
 
     for (const codeName of orderedItems) {
       const quantity = demand.get(codeName) || 0;
@@ -190,7 +191,11 @@
 
       if (projectOutputs.has(codeName)) {
         for (const input of inputs) {
-          directMaterials.set(input.codeName, (directMaterials.get(input.codeName) || 0) + input.quantity);
+          primaryMaterials.set(input.codeName, (primaryMaterials.get(input.codeName) || 0) + input.quantity);
+        }
+      } else {
+        for (const input of inputs) {
+          secondaryMaterials.set(input.codeName, (secondaryMaterials.get(input.codeName) || 0) + input.quantity);
         }
       }
     }
@@ -201,7 +206,8 @@
       missingChoices: [...missingChoices.values()],
       cycles: [],
       materials,
-      directMaterials,
+      primaryMaterials,
+      secondaryMaterials,
       steps
     };
   }

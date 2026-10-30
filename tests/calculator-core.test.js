@@ -27,6 +27,8 @@ test('combines shared intermediate demand before rounding production batches', (
 
   assert.equal(result.ready, true);
   assert.equal(result.materials.get('Metal'), 5);
+  assert.equal(result.primaryMaterials.get('Part'), 2);
+  assert.equal(result.secondaryMaterials.get('Metal'), 5);
   assert.equal(result.steps.find(step => step.codeName === 'Part').quantity, 2);
   assert.equal(result.steps.find(step => step.codeName === 'Part').batches, 1);
 });
@@ -76,7 +78,7 @@ test('shows known first-level materials while a downstream recipe is unselected'
   const result = calculateProject([{ codeName: 'Vehicle', quantity: 1 }], data);
 
   assert.equal(result.ready, false);
-  assert.equal(result.directMaterials.get('BasicMaterials'), 12);
+  assert.equal(result.primaryMaterials.get('BasicMaterials'), 12);
   assert.equal(result.missingChoices[0].codeName, 'BasicMaterials');
 });
 
@@ -90,7 +92,8 @@ test('counts bunker excavations without expanding them into factory materials', 
   const result = calculateProject([{ codeName: 'FortT1', quantity: 2 }], data);
 
   assert.equal(result.ready, true);
-  assert.equal(result.directMaterials.get('Excavation'), 150);
+  assert.equal(result.primaryMaterials.get('Excavation'), 150);
+  assert.equal(result.secondaryMaterials.size, 0);
   assert.equal(result.materials.get('Excavation'), 150);
   assert.equal(result.materials.has('Cloth'), false);
   assert.equal(result.materials.has('Metal'), false);

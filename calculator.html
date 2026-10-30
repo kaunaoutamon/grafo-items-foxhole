@@ -44,13 +44,22 @@
         </section>
 
         <section id="results-section" class="calculator-card results-card" aria-labelledby="results-heading" hidden>
-          <h2 id="results-heading">Materiales base necesarios</h2>
+          <h2 id="results-heading">Materiales del proyecto</h2>
           <div id="calculation-status" class="calculation-status" role="status"></div>
-          <section id="direct-materials-section" class="direct-materials-section" hidden>
-            <h3>Insumos del primer desglose</h3>
-            <div id="direct-materials" class="materials-total"></div>
+          <section id="primary-materials-section" class="material-group" hidden>
+            <h3>Materiales primarios</h3>
+            <p>Insumos directos de las recetas de los ítems elegidos.</p>
+            <div id="primary-materials" class="materials-total"></div>
           </section>
-          <div id="materials-total" class="materials-total"></div>
+          <section id="secondary-materials-section" class="material-group" hidden>
+            <h3>Materiales secundarios</h3>
+            <p>Insumos derivados del desglose recursivo de los materiales primarios y sus componentes.</p>
+            <div id="secondary-materials" class="materials-total"></div>
+          </section>
+          <section id="base-materials-section" class="material-group" hidden>
+            <h3>Recursos finales</h3>
+            <div id="base-materials" class="materials-total"></div>
+          </section>
           <details id="production-details" class="production-details" hidden>
             <summary>Ver desglose de producción</summary>
             <div id="production-steps"></div>

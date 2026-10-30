@@ -449,7 +449,7 @@ main {
   color: #ff9b91;
 }
 
-.direct-materials-section {
+.material-group {
   margin: 1rem 0;
   padding: 0.9rem;
   background: #11141a;
@@ -457,10 +457,16 @@ main {
   border-radius: 4px;
 }
 
-.direct-materials-section h3 {
-  margin: 0 0 0.75rem;
+.material-group h3 {
+  margin: 0 0 0.4rem;
   color: #c5cedb;
   font-size: 0.95rem;
+}
+
+.material-group > p {
+  margin: 0 0 0.75rem;
+  color: #9fb0c7;
+  font-size: 0.85rem;
 }
 
 .materials-total {
