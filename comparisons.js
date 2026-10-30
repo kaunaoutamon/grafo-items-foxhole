@@ -4,20 +4,17 @@
   const resultsSection = document.getElementById('comparison-results');
   const status = document.getElementById('comparison-status');
   const comparedItems = document.getElementById('compared-items');
-  const comparisonProperties = document.getElementById('comparison-properties');
   const numberFormat = new Intl.NumberFormat('es-ES', { maximumFractionDigits: 2 });
   const { displayItemName, escapeHtml } = FoxholeUI;
 
   const panels = {
     left: {
       faction: document.getElementById('left-faction'),
-      item: document.getElementById('left-item'),
-      label: 'A'
+      item: document.getElementById('left-item')
     },
     right: {
       faction: document.getElementById('right-faction'),
-      item: document.getElementById('right-item'),
-      label: 'B'
+      item: document.getElementById('right-item')
     }
   };
 
@@ -33,6 +30,34 @@
     Other: 'Otros',
     Vehicles: 'Vehículos',
     Structures: 'Estructuras'
+  };
+
+  const comparisonTypeLabels = {
+    'Assault Rifle': 'Fusil de asalto',
+    'Heavy Rifle': 'Fusil pesado',
+    'Long Rifle': 'Fusil de largo alcance',
+    'Machine Gun': 'Ametralladora',
+    'Mortar': 'Mortero',
+    'Mortar Ammo': 'Munición de mortero',
+    'Pistol': 'Pistola',
+    'Rifle': 'Fusil',
+    'Shotgun': 'Escopeta',
+    'Sniper Rifle': 'Fusil de francotirador',
+    'Submachine Gun': 'Subfusil',
+    Bicycle: 'Bicicleta',
+    CombatShip: 'Buque de combate',
+    HandheldWeapon: 'Arma portátil',
+    LandingCraft: 'Lancha de desembarco',
+    LargeCombatShip: 'Buque de combate grande',
+    OpenRoofWheeledTransport: 'Transporte con ruedas descubierto',
+    Rail: 'Vehículo ferroviario',
+    RailCar: 'Vagón',
+    Ship: 'Buque',
+    Tank: 'Tanque',
+    TrackedTransport: 'Transporte con orugas',
+    Trailer: 'Remolque',
+    WheeledArmoured: 'Vehículo blindado con ruedas',
+    WheeledTransport: 'Transporte con ruedas'
   };
 
   const propertyLabels = {
@@ -103,7 +128,11 @@
   };
 
   function categoryLabel(category) {
-    return categoryLabels[category] || category;
+    const [group, type] = category.split(':', 2);
+    const groupLabel = categoryLabels[group] || group;
+    if (!type) return groupLabel;
+    const typeLabel = comparisonTypeLabels[type] || type.replace(/([a-z0-9])([A-Z])/g, '$1 $2');
+    return `${groupLabel} · ${typeLabel}`;
   }
 
   function propertyLabel(propertyKey, items) {
@@ -136,16 +165,30 @@
     return `<div class="comparison-value${state}"><span>${escapeHtml(formatPropertyValue(value))}</span>${badge}</div>`;
   }
 
-  function renderComparedItem(item, side) {
+  function renderComparisonPanel(item, side, panelLabel, rows) {
     const icon = item.iconFile
       ? `<img src="${escapeHtml(item.iconFile)}" alt="">`
       : '';
     const faction = item.faction || 'Neutral';
     return `
-      <div class="compared-item compared-item-${side}">
-        ${icon}
-        <div><h3>${escapeHtml(item.displayName)}</h3><p>${escapeHtml(faction)}</p></div>
-      </div>
+      <article class="comparison-item-panel">
+        <header class="comparison-item-header">
+          <span class="comparison-panel-label">Ítem ${panelLabel}</span>
+          ${icon}
+          <div><h3>${escapeHtml(item.displayName)}</h3><p>${escapeHtml(faction)}</p></div>
+        </header>
+        <div class="comparison-panel-properties">
+          ${rows.map(row => `
+            <div class="comparison-panel-property">
+              <div class="comparison-property-name">
+                <span>${escapeHtml(row.label)}</span>
+                <small>${escapeHtml(row.outcome.message)}</small>
+              </div>
+              ${renderValue(row[side], side, row.outcome)}
+            </div>
+          `).join('')}
+        </div>
+      </article>
     `;
   }
 
@@ -180,30 +223,13 @@
       });
     }
 
+    const comparedRows = rows.map(row => ({
+      ...row,
+      outcome: FoxholeComparison.compareProperty(row.left, row.right, row.key)
+    }));
     comparedItems.innerHTML = `
-      <div class="comparison-item-headings">
-        ${renderComparedItem(leftItem, 'left')}
-        ${renderComparedItem(rightItem, 'right')}
-      </div>
-    `;
-
-    comparisonProperties.innerHTML = `
-      <div class="comparison-property-grid comparison-property-header">
-        <span>Propiedad</span><span>Ítem A</span><span>Ítem B</span>
-      </div>
-      ${rows.map(row => {
-        const outcome = FoxholeComparison.compareProperty(row.left, row.right, row.key);
-        return `
-          <div class="comparison-property-grid comparison-property-row">
-            <div class="comparison-property-name">
-              <span>${escapeHtml(row.label)}</span>
-              <small>${escapeHtml(outcome.message)}</small>
-            </div>
-            ${renderValue(row.left, 'left', outcome)}
-            ${renderValue(row.right, 'right', outcome)}
-          </div>
-        `;
-      }).join('')}
+      ${renderComparisonPanel(leftItem, 'left', 'A', comparedRows)}
+      ${renderComparisonPanel(rightItem, 'right', 'B', comparedRows)}
     `;
     resultsSection.hidden = false;
   }
@@ -264,7 +290,13 @@
   ];
   for (const select of allSelects) ThemedDropdown.enhance(select);
 
-  const categories = [...new Set(Object.values(comparisonData.items).map(item => item.category))]
+  const categoryCounts = new Map();
+  for (const comparison of Object.values(comparisonData.items)) {
+    categoryCounts.set(comparison.category, (categoryCounts.get(comparison.category) || 0) + 1);
+  }
+  const categories = [...categoryCounts.entries()]
+    .filter(([, count]) => count > 1)
+    .map(([category]) => category)
     .sort((a, b) => categoryLabel(a).localeCompare(categoryLabel(b)));
   replaceOptions(
     categorySelect,
