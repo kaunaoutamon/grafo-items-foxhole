@@ -39,45 +39,50 @@ header h1 {
   gap: 0.5rem;
 }
 
-.controls input {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #3a3f4a;
-  border-radius: 4px;
-  background: #0f1115;
-  color: #e0e0e0;
-  min-width: 160px;
-}
-
-.select-control {
+.form-control {
+  display: block;
+  width: 100%;
   min-width: 0;
-  padding: 0.65rem 2.5rem 0.65rem 0.75rem;
+  min-height: 42px;
+  padding: 0.65rem 0.75rem;
   border: 1px solid #3a3f4a;
   border-radius: 4px;
-  appearance: none;
-  -webkit-appearance: none;
   background-color: #0f1115;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5 7 5 5 5-5' stroke='%23f0b040' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 1rem;
   color: #e0e0e0;
   color-scheme: dark;
   font: inherit;
   line-height: 1.25;
-  cursor: pointer;
   transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
 }
 
-.controls .select-control {
-  min-width: 160px;
-  padding: 0.5rem 2.25rem 0.5rem 0.75rem;
+.select-control {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 2.5rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'%3E%3Cpath d='m5 7 5 5 5-5' stroke='%23f0b040' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
+  cursor: pointer;
 }
 
+.controls .form-control {
+  width: auto;
+  min-width: 160px;
+}
+
+.form-control:hover,
 .select-control:hover {
   border-color: #626a78;
   background-color: #181b21;
 }
 
+.form-control::placeholder {
+  color: #8f9aab;
+  opacity: 1;
+}
+
+.form-control:focus-visible,
 .select-control:focus-visible {
   border-color: #f0b040;
   outline: 2px solid rgba(240, 176, 64, 0.55);
@@ -90,7 +95,8 @@ header h1 {
 }
 
 .controls button {
-  padding: 0.5rem 0.75rem;
+  min-height: 42px;
+  padding: 0.65rem 0.9rem;
   border: 1px solid #3a3f4a;
   border-radius: 4px;
   background: #252a33;
@@ -366,16 +372,6 @@ main {
   min-width: 0;
 }
 
-.add-project-item input {
-  min-width: 0;
-  padding: 0.65rem 0.75rem;
-  border: 1px solid #3a3f4a;
-  border-radius: 4px;
-  background: #0f1115;
-  color: #e0e0e0;
-  font: inherit;
-}
-
 .item-field input[role="combobox"] {
   width: 100%;
   padding-right: 2.5rem;
@@ -383,11 +379,6 @@ main {
   background-repeat: no-repeat;
   background-position: right 0.75rem center;
   background-size: 1rem;
-}
-
-.add-project-item input:focus {
-  outline: 2px solid rgba(240, 176, 64, 0.65);
-  outline-offset: 1px;
 }
 
 .item-suggestions {
@@ -529,16 +520,6 @@ main {
 .project-item-name span,
 .material-name span {
   overflow-wrap: anywhere;
-}
-
-.project-quantity {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #3a3f4a;
-  border-radius: 4px;
-  background: #181b21;
-  color: #e0e0e0;
-  font: inherit;
 }
 
 .recipe-choices {

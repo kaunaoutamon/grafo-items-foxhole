@@ -161,7 +161,7 @@
             <span>${escapeHtml(displayName(entry.codeName, data.items))}</span>
           </div>
           <label class="visually-hidden" for="project-quantity-${entry.id}">Cantidad de ${escapeHtml(displayName(entry.codeName, data.items))}</label>
-          <input id="project-quantity-${entry.id}" class="project-quantity" data-action="quantity" type="number" min="1" step="1" value="${entry.quantity}">
+          <input id="project-quantity-${entry.id}" class="form-control project-quantity" data-action="quantity" type="number" min="1" step="1" value="${entry.quantity}">
           <button class="remove-project-item" data-action="remove" type="button" aria-label="Quitar ${escapeHtml(displayName(entry.codeName, data.items))}">Quitar</button>
         </div>
       `;
@@ -189,7 +189,7 @@
         <span class="recipe-choice-name">${escapeHtml(displayName(choice.codeName, data.items))}</span>
         <label>
           Elegí una receta
-          <select class="select-control" data-recipe-output="${escapeHtml(choice.codeName)}" required>
+          <select class="form-control select-control" data-recipe-output="${escapeHtml(choice.codeName)}" required>
             <option value="">Seleccioná una receta...</option>
             ${choice.recipes.map(recipe => `
               <option value="${escapeHtml(recipe.id)}" ${recipe.id === choice.selectedId ? 'selected' : ''}>

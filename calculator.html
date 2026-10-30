@@ -24,12 +24,12 @@
           <form id="add-project-item" class="add-project-item">
             <div class="item-field">
               <label for="item-search">Ítem o vehículo</label>
-              <input id="item-search" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="item-options" placeholder="Buscar por nombre..." autocomplete="off" required>
+              <input id="item-search" class="form-control" type="text" role="combobox" aria-autocomplete="list" aria-haspopup="listbox" aria-expanded="false" aria-controls="item-options" placeholder="Buscar por nombre..." autocomplete="off" required>
               <div id="item-options" class="item-suggestions" role="listbox" aria-label="Ítems y vehículos" hidden></div>
             </div>
             <label class="quantity-field" for="item-quantity">
               Cantidad
-              <input id="item-quantity" type="number" min="1" step="1" value="1" required>
+              <input id="item-quantity" class="form-control" type="number" min="1" step="1" value="1" required>
             </label>
             <button class="primary-button" type="submit">Agregar</button>
           </form>
