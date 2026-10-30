@@ -31,7 +31,7 @@
 
     parent.insertBefore(wrapper, select);
     wrapper.append(trigger, options, select);
-    select.classList.add('visually-hidden');
+    select.classList.add('themed-native-select');
     select.setAttribute('aria-hidden', 'true');
     select.tabIndex = -1;
 
